@@ -57,6 +57,49 @@ export default function AdminDashboard() {
     ]);
 
     useEffect(() => {
+        async function fetchBookings() {
+            try {
+                const res = await fetch('/api/bookings');
+                if (res.ok) {
+                    const dbBookings = await res.json();
+
+                    // Transform DB booking format to UI format if needed
+                    const formattedDbBookings = dbBookings.map((b: any) => ({
+                        id: b.id,
+                        rider: b.riderName,
+                        bike: b.scooter?.name || "Unknown Scooter",
+                        date: new Date(b.createdAt).toLocaleDateString(),
+                        status: b.status,
+                        amount: `$${b.totalAmount}`,
+                        details: {
+                            passport: b.riderPassport,
+                            phone: b.riderPhone,
+                            idFront: b.documents?.idFront || "/images/id-front-template.png",
+                            idBack: b.documents?.idBack || "/images/id-back-template.png",
+                            passportImg: b.documents?.passport || null
+                        }
+                    }));
+
+                    setBookings(prev => {
+                        // Merge db bookings with existing static/local ones
+                        // prioritizing DB ones
+                        const combined = [...formattedDbBookings, ...prev];
+                        const seen = new Set();
+                        return combined.filter(b => {
+                            if (seen.has(b.id)) return false;
+                            seen.add(b.id);
+                            return true;
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch bookings:", error);
+            }
+        }
+
+        fetchBookings();
+
+        // Keep localStorage as secondary source for now
         const recentBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
         if (recentBookings.length > 0) {
             setBookings(prev => {

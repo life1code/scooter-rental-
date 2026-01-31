@@ -186,6 +186,25 @@ export default function BookingConfirm() {
                 }
             });
 
+            // Save to localStorage for "My Bookings" page
+            try {
+                const existingBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
+                // Add new booking to start of list
+                const newBookings = [
+                    {
+                        ...savedBooking,
+                        scooterImage: scooter?.image, // Ensure image is passed for UI
+                        location: scooter?.location || "Unawatuna",
+                        ownerName: scooter?.ownerName || "Ride Owner",
+                        ownerWhatsapp: scooter?.ownerWhatsapp || "+94700000000"
+                    },
+                    ...existingBookings
+                ];
+                safeSaveToLocalStorage("recent_bookings", newBookings);
+            } catch (storageError) {
+                console.error("Failed to save to localStorage:", storageError);
+            }
+
             setIsSubmitted(true);
         } catch (error: any) {
             console.error('Booking error:', error);
