@@ -104,22 +104,22 @@ export default function MyBookingsPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-2 pr-4 border-r border-white/10">
+                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
+                        <div className="flex items-center gap-2 pr-4 border-r border-white/10 shrink-0">
                             <Battery className="w-5 h-5 text-green-500" />
                             <div>
                                 <p className="text-[10px] font-bold text-white/40 uppercase">Battery</p>
                                 <p className="text-sm font-bold text-green-500">87%</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 px-4 border-r border-white/10">
+                        <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0">
                             <Radio className="w-5 h-5 text-[var(--primary)] animate-pulse" />
                             <div>
                                 <p className="text-[10px] font-bold text-white/40 uppercase">Signal</p>
                                 <p className="text-sm font-bold">Excellent</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 pl-4">
+                        <div className="flex items-center gap-2 pl-4 shrink-0">
                             <ShieldCheck className="w-5 h-5 text-[var(--primary)]" />
                             <div>
                                 <p className="text-[10px] font-bold text-white/40 uppercase">Security</p>
@@ -148,7 +148,7 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-white/40 uppercase font-bold">Full Name</p>
-                                            <p className="font-bold">{booking.rider}</p>
+                                            <p className="font-bold">{booking.riderName || booking.rider}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -157,7 +157,7 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-white/40 uppercase font-bold">WhatsApp</p>
-                                            <p className="font-bold">{booking.details?.phone}</p>
+                                            <p className="font-bold">{booking.riderPhone || booking.details?.phone}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -166,7 +166,7 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-white/40 uppercase font-bold">Passport / ID</p>
-                                            <p className="font-bold">{booking.details?.passport}</p>
+                                            <p className="font-bold">{booking.riderPassport || booking.details?.passport}</p>
                                         </div>
                                     </div>
                                 </div>

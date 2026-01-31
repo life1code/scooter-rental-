@@ -193,6 +193,7 @@ export default function BookingConfirm() {
                 const newBookings = [
                     {
                         ...savedBooking,
+                        bike: scooter?.name, // Add bike name explicitly
                         scooterImage: scooter?.image, // Ensure image is passed for UI
                         location: scooter?.location || "Unawatuna",
                         ownerName: scooter?.ownerName || "Ride Owner",
