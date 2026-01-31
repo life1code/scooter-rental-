@@ -83,7 +83,7 @@ export default function ScooterDetail() {
                                 {Object.entries(scooter.specs).map(([key, value]) => (
                                     <div key={key} className="glass-card p-4 text-center">
                                         <p className="text-[10px] uppercase text-white/40 font-bold mb-1">{key}</p>
-                                        <p className="font-bold text-sm">{value}</p>
+                                        <p className="font-bold text-sm">{String(value)}</p>
                                     </div>
                                 ))}
                             </div>
