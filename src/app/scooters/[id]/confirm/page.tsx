@@ -187,9 +187,9 @@ export default function BookingConfirm() {
             });
 
             setIsSubmitted(true);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Booking error:', error);
-            alert('Failed to create booking. Please try again.');
+            alert(`Failed to create booking: ${error.message || "Unknown error"}`);
         }
     };
 
