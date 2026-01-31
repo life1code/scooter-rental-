@@ -104,7 +104,7 @@ export default function MyBookingsPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-2 bg-white/5 p-3 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
                         <div className="flex items-center gap-2 pr-4 border-r border-white/10 shrink-0">
                             <Battery className="w-5 h-5 text-green-500" />
                             <div>
