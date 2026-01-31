@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("user") // "admin" or "user"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bookings  Booking[]
+}
+
+model Scooter {
+  id              String   @id @default(uuid())
+  name            String
+  type            String
+  pricePerDay     Float
+  rating          Float    @default(5.0)
+  reviews         Int      @default(0)
+  image           String
+  description     String
+  isSpotlight     Boolean  @default(false)
+  manufacturerUrl String?
+  location        String   @default("Unawatuna")
+  ownerName       String   @default("Ride Owner")
+  ownerWhatsapp   String   @default("+94700000000")
+  
+  // JSON field for flexible specs
+  specs           Json
+
+  // Status
+  status          String   @default("Available") // Available, Rented, Maintenance
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bookings        Booking[]
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  name      String
+  location  String
+  rating    Int
+  content   String
+  date      DateTime @default(now())
+  bike      String   // Can be the scooter name
+  approved  Boolean  @default(true) // Auto-approve for now
+  avatar    String   @default("https://i.pravatar.cc/150?u=default")
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  // Relation to Scooter
+  scooterId       String
+  scooter         Scooter  @relation(fields: [scooterId], references: [id])
+  
+  // Relation to User (optional for guest checkout if we supported it, but let's link it or store rider details directly)
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+
+  riderName       String
+  riderEmail      String?
+  riderPhone      String
+  riderPassport   String
+
+  startDate       DateTime
+  endDate         DateTime
+  totalAmount     Float
+
+  status          String   @default("Pending") // Pending, Active, Completed, Cancelled
+  
+  // Verification details
+  verificationStatus String @default("Pending") // Pending, Verified, Rejected
+  
+  // JSON for documents urls (idFront, idBack, passport, signature)
+  documents       Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
