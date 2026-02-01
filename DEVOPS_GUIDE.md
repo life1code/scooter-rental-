@@ -21,7 +21,7 @@ chmod 400 scooter-key.pem
 
 Then SSH into your new instance:
 ```bash
-ssh -i "scooter-key.pem" ubuntu@54.206.34.170
+ssh -i "scooter-key.pem" ubuntu@16.176.139.80
 ```
 
 Run the following commands to install dependencies:
@@ -95,32 +95,10 @@ For the agent to deploy to your cluster (e.g., EKS or Minikube), it needs a `~/.
 6.  Script Path: `Jenkinsfile`.
 7.  Save and **Build Now**!
 
-## Step 7: Accessing Your App
-Once the pipeline deploys successfully:
-**App URL**: `http://54.206.34.170:30080`
-
-## Database (RDS)
-Your Database `scooter-db` is being created.
-Host: `scooter-db.cyhsgau6y5r0.ap-southeast-2.rds.amazonaws.com` (Check Console for exact endpoint if different)
-User: `scooter_admin`
-Pass: `scooter_password_123`
-
-
-## Step 7: Accessing Your App
-Once the pipeline deploys successfully:
-**App URL**: `http://54.206.34.170:30080`
-
-## Database (RDS)
-Your Database `scooter-db` is being created.
-Host: `scooter-db.cyhsgau6y5r0.ap-southeast-2.rds.amazonaws.com` (Check Console for exact endpoint)
-User: `scooter_admin`
-Pass: `scooter_password_123`
-
-
 ## Step 6: Accessing Jenkins (Setup Complete)
 Your Jenkins is now running!
 
-**Jenkins URL**: `http://54.206.34.170:8080`
+**Jenkins URL**: `http://16.176.139.80:8080`
 **Initial Admin Password**: `829634c21f11418ca45cd6ab561d2da0`
 
 ### Pipeline Configuration
@@ -129,11 +107,11 @@ Your Jenkins is now running!
 
 ## Step 7: Accessing Your App
 Once the pipeline deploys successfully:
-**App URL**: `http://54.206.34.170:30080`
+**App URL**: `http://16.176.139.80:30080`
 
 ## Database (RDS)
-Your Database `scooter-db` is being created.
-Host: `scooter-db.cyhsgau6y5r0.ap-southeast-2.rds.amazonaws.com` (Example - check Console)
+Your Database `scooter-db` is active.
+Host: `scooter-db.cyhsgau6y5r0.ap-southeast-2.rds.amazonaws.com`
 User: `scooter_admin`
 Pass: `scooter_password_123`
 
