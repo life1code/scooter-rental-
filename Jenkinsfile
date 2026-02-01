@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'ec2'
-    }
+    agent any
 
     environment {
         APP_NAME = 'scooter-rental'
