@@ -3,7 +3,7 @@ import { prisma } from "@/backend/lib/db";
 
 export async function GET(request: Request) {
     try {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } = new URL(request.url, "http://localhost");
         const spotlight = searchParams.get('spotlight') === 'true';
 
         let whereConfig = {};

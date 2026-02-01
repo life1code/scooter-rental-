@@ -29,7 +29,7 @@ export function Navbar() {
         <nav className="sticky top-0 z-50 w-full glass-card !rounded-none border-t-0 border-x-0 bg-[var(--background)]/80">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                 <Link href="/" className="flex items-center">
-                    <img src="/logo.png" alt="Ride Logo" className="h-12 w-auto object-contain" />
+                    <img src="/logo.png" alt="Rydex Logo" className="h-12 w-auto object-contain" />
                 </Link>
 
                 {/* Desktop Nav */}
