@@ -24,6 +24,18 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: db-migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["npx", "prisma", "db", "push", "--accept-data-loss"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: scooter-secrets
+                  key: database-url
+                  optional: true
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

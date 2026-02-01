@@ -28,6 +28,7 @@ COPY . .
 # ENV NEXT_TELEMETRY_DISABLED 1
 
 # If using npm comment out above and use below instead
+RUN npx prisma generate
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -35,17 +36,19 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Don't run as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Set permissions for nextjs user
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# We need the prisma schema in the runner if we want to run migrations or if prisma needs it
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -54,7 +57,7 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT 3000
-# set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
+# Note: server.js doesn't run prisma db push. We will add that to the Helm chart or a wrapper script.
 CMD ["node", "server.js"]
