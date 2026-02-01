@@ -2,14 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // App Name
         APP_NAME = 'scooter-rental'
-        // Docker Registry (Replace with your actual registry, e.g., AWS ECR or Docker Hub)
-        DOCKER_REGISTRY = 'scooter-rental' 
-        // Kubernetes Namespace
+        // Use ttl.sh ephemeral registry (no auth required, images last 2h)
+        REGISTRY = 'ttl.sh'
+        // Unique image tag per build
+        IMAGE_TAG = "scooter-rental-${env.BUILD_NUMBER}:2h"
         K8S_NAMESPACE = 'default'
-        // Image Tag based on Build Number
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -19,17 +17,15 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build & Push Image') {
             steps {
                 script {
-                    echo "Building Docker image..."
-                    // Build image
-                    sh "docker build -t ${APP_NAME}:${IMAGE_TAG} ."
+                    echo "Building & Pushing to ttl.sh..."
+                    def fullImage = "${REGISTRY}/${IMAGE_TAG}"
                     
-                    // Since we are running single-node K3s, we need to import the image 
-                    // from Docker (Jenkins) to K3s (containerd)
-                    echo "Importing image to K3s..."
-                    sh "docker save ${APP_NAME}:${IMAGE_TAG} | sudo k3s ctr images import -"
+                    // Build and Push
+                    sh "docker build -t ${fullImage} ."
+                    sh "docker push ${fullImage}"
                 }
             }
         }
@@ -38,15 +34,16 @@ pipeline {
             steps {
                 script {
                     echo "Deploying to Kubernetes..."
+                    // ttl.sh format: ttl.sh/repo:tag
+                    // Here: repo=ttl.sh/scooter-rental-<num>, tag=2h
+                    // Or simply passing the full repo and tag split
                     
-                    // Upgrade or Install the chart
-                    // We use imagePullPolicy=Never so K3s uses the local image we just imported
                     sh """
                         helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
                         --namespace ${K8S_NAMESPACE} \
-                        --set image.repository=${APP_NAME} \
-                        --set image.tag=${IMAGE_TAG} \
-                        --set image.pullPolicy=Never
+                        --set image.repository=${REGISTRY}/scooter-rental-${env.BUILD_NUMBER} \
+                        --set image.tag=2h \
+                        --set image.pullPolicy=Always
                     """
                 }
             }
@@ -54,11 +51,8 @@ pipeline {
     }
 
     post {
-        success {
-            echo "Pipeline succeeded!"
-        }
         failure {
-            echo "Pipeline failed."
+            echo "Pipeline failed. Check logs."
         }
     }
 }
