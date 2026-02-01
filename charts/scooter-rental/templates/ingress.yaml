@@ -7,7 +7,7 @@
   {{- end -}}
 {{- end -}}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
-apiVersion: networking.k8s.io/1.1
+apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/1beta1
 {{- else -}}
@@ -49,12 +49,12 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ $fullName }}
+                name: {{ if contains "adminer" .host }}adminer{{ else }}{{ $fullName }}{{ end }}
                 port:
-                  number: {{ $svcPort }}
+                  number: {{ if contains "adminer" .host }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- else }}
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+              serviceName: {{ if contains "adminer" .host }}adminer{{ else }}{{ $fullName }}{{ end }}
+              servicePort: {{ if contains "adminer" .host }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- end }}
           {{- end }}
     {{- end }}

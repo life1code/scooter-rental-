@@ -16,11 +16,11 @@ export default function AdminLogin() {
         setError("");
 
         // Simple password for the host - can be updated later
-        if (password === "admin123") {
+        if (password === "T2P4EcBeOl3A") {
             // Set a local flag to identify as admin
             localStorage.setItem("is_host_admin", "true");
             document.cookie = "is_host_admin=true; path=/";
-            router.push("/admin");
+            router.push("/admin/dashboard");
         } else {
             setError("Incorrect administrator password.");
             setIsLoading(false);
