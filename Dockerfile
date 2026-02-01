@@ -1,6 +1,6 @@
 
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat openssl
+FROM node:20-alpine3.18 AS base
+RUN apk add --no-cache libc6-compat openssl1.1-compat
 RUN npm install -g prisma@5.10.0
 
 
