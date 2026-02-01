@@ -6,8 +6,11 @@ import { AuthProvider } from "@/frontend/components/AuthProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Ride - Premium Scooter Rental",
+  title: "Rydex - Premium Scooter Rental",
   description: "Book your favorite scooter with ease. Premium rentals for the modern rider.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
