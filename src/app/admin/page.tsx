@@ -19,7 +19,8 @@ import {
     ShieldCheck,
     ExternalLink,
     X,
-    Download
+    Download,
+    Navigation
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
