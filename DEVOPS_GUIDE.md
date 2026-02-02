@@ -107,7 +107,7 @@ Your Jenkins is now running!
 
 ## Step 7: Accessing Your App
 Once the pipeline deploys successfully:
-**App URL**: `http://3.25.163.22:30080`
+**App URL**: `http://3.25.163.22:30080` or `https://rydex.ceilao.com`
 
 ## Database (RDS)
 Your Database `scooter-db` is active.
