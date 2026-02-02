@@ -3,9 +3,10 @@ import { prisma } from "@/backend/lib/db";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id: scooterId } = await params;
         const { searchParams } = new URL(request.url);
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
@@ -17,7 +18,6 @@ export async function GET(
             );
         }
 
-        const scooterId = params.id;
         const requestedStart = new Date(startDate);
         const requestedEnd = new Date(endDate);
 
