@@ -24,19 +24,6 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      initContainers:
-        - name: db-migrate
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              export DATABASE_URL="postgresql://scooter_admin:$(cat /mnt/secrets-store/rds_password)@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
-              npx prisma db push --accept-data-loss --skip-generate
-          volumeMounts:
-            - name: secrets-store-inline
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -47,12 +34,9 @@ spec:
             - name: http
               containerPort: 3000
               protocol: TCP
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              export DATABASE_URL="postgresql://scooter_admin:$(cat /mnt/secrets-store/rds_password)@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
-              node server.js
           env:
+            - name: DATABASE_URL
+              value: {{ .Values.database.url | quote }}
             - name: NEXTAUTH_SECRET
               value: {{ .Values.nextauth.secret | default "super-secret-placeholder" | quote }}
             - name: NEXTAUTH_URL
@@ -61,12 +45,6 @@ spec:
               value: {{ .Values.nextauth.baseUrl | default (printf "https://%s" (index .Values.ingress.hosts 0).host) | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: s3-storage
-              mountPath: /app/uploads
-            - name: secrets-store-inline
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -79,14 +57,5 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: s3-storage
-          persistentVolumeClaim:
-            claimName: s3-pvc
-        - name: secrets-store-inline
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: "scooter-secrets-provider"
+
 
