@@ -222,6 +222,8 @@ export default function AdminDashboard() {
                                             <th className="p-4 text-[10px] font-bold uppercase text-white/40">Reference</th>
                                             <th className="p-4 text-[10px] font-bold uppercase text-white/40">Rider</th>
                                             <th className="p-4 text-[10px] font-bold uppercase text-white/40">Scooter</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Pickup</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Return</th>
                                             <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
                                             <th className="p-4 text-[10px] font-bold uppercase text-white/40 text-right">Action</th>
                                         </tr>
@@ -235,6 +237,8 @@ export default function AdminDashboard() {
                                                     <p className="text-[10px] text-white/40">{new Date(booking.createdAt).toLocaleDateString()}</p>
                                                 </td>
                                                 <td className="p-4 text-sm text-white/80">{booking.scooter?.name}</td>
+                                                <td className="p-4 text-xs text-white/60">{new Date(booking.startDate).toLocaleDateString()}</td>
+                                                <td className="p-4 text-xs text-white/60">{new Date(booking.endDate).toLocaleDateString()}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${booking.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
                                                         booking.status === 'Active' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
