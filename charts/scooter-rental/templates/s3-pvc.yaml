@@ -14,7 +14,9 @@ spec:
   storageClassName: s3-storage-class
   csi:
     driver: s3.csi.aws.com
-    volumeHandle: amzn-s3-scooter-bucket
+    volumeHandle: s3-data-id
+    volumeAttributes:
+      bucketName: amzn-s3-scooter-bucket
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
