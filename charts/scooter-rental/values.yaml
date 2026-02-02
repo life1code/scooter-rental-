@@ -43,19 +43,19 @@ ingress:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
   hosts:
-    - host: Rydex.ceilao.lk
+    - host: rydex.ceilao.lk
       paths:
         - path: /
           pathType: Prefix
-    - host: adminer.Rydex.ceilao.lk
+    - host: adminer.rydex.ceilao.lk
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: scooter-rental-tls
       hosts:
-        - Rydex.ceilao.lk
-        - adminer.Rydex.ceilao.lk
+        - rydex.ceilao.lk
+        - adminer.rydex.ceilao.lk
 
 resources: 
   limits:
