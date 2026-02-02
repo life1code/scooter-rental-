@@ -18,6 +18,13 @@ export default function BookingConfirm() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [signatureData, setSignatureData] = useState<string | null>(null);
 
+    // Date selection state
+    const [startDate, setStartDate] = useState<string>("");
+    const [endDate, setEndDate] = useState<string>("");
+    const [numberOfDays, setNumberOfDays] = useState<number>(0);
+    const [totalPrice, setTotalPrice] = useState<number>(0);
+    const [discount, setDiscount] = useState<number>(0);
+
     useEffect(() => {
         if (!id) return;
 
@@ -40,6 +47,32 @@ export default function BookingConfirm() {
 
         fetchScooter();
     }, [id]);
+
+    // Calculate price when dates change
+    useEffect(() => {
+        if (startDate && endDate && scooter) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (days > 0) {
+                setNumberOfDays(days);
+                const pricePerDay = scooter.pricePerDay || 0;
+                const subtotal = days * pricePerDay;
+
+                // Calculate discount
+                let discountPercent = 0;
+                if (days >= 30) discountPercent = 12;
+                else if (days >= 7) discountPercent = 5;
+
+                const discountAmount = subtotal * (discountPercent / 100);
+                const total = subtotal - discountAmount;
+
+                setDiscount(discountPercent);
+                setTotalPrice(total);
+            }
+        }
+    }, [startDate, endDate, scooter]);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -123,6 +156,16 @@ export default function BookingConfirm() {
         // Get form data
         const formData = new FormData(e.target as HTMLFormElement);
 
+        if (!startDate || !endDate) {
+            alert("Please select pickup and return dates.");
+            return;
+        }
+
+        if (numberOfDays <= 0) {
+            alert("Return date must be after pickup date.");
+            return;
+        }
+
         // Prepare booking data for database
         const bookingData = {
             scooterId: scooter?.id,
@@ -130,9 +173,9 @@ export default function BookingConfirm() {
             riderEmail: formData.get('email') as string || null,
             riderPhone: formData.get('phone') as string,
             riderPassport: formData.get('passport') as string,
-            startDate: new Date().toISOString(), // You should get this from the date picker
-            endDate: new Date(Date.now() + 86400000).toISOString(), // +1 day, should come from picker
-            totalAmount: scooter?.pricePerDay || 25,
+            startDate: new Date(startDate).toISOString(),
+            endDate: new Date(endDate).toISOString(),
+            totalAmount: totalPrice,
             documents: {
                 idFront: previews.licenseFront,
                 idBack: previews.licenseBack,
@@ -312,6 +355,59 @@ export default function BookingConfirm() {
                                             <input required name="phone" type="tel" placeholder="+94 77 123 4567" className="bg-transparent border-none focus:outline-none w-full text-sm" />
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Rental Period */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-white/60 border-l-2 border-[var(--primary)] pl-3">Rental Period</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">Pickup Date</label>
+                                            <input
+                                                required
+                                                type="date"
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                className="w-full bg-white/5 p-3 rounded-xl border border-white/5 focus:border-[var(--primary)]/50 transition-colors text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">Return Date</label>
+                                            <input
+                                                required
+                                                type="date"
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.target.value)}
+                                                min={startDate || new Date().toISOString().split('T')[0]}
+                                                className="w-full bg-white/5 p-3 rounded-xl border border-white/5 focus:border-[var(--primary)]/50 transition-colors text-sm"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Price Summary */}
+                                    {numberOfDays > 0 && (
+                                        <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-xl p-4 space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-white/60">Rental Duration:</span>
+                                                <span className="font-bold">{numberOfDays} {numberOfDays === 1 ? 'day' : 'days'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-white/60">Rate:</span>
+                                                <span className="font-bold">${scooter?.pricePerDay}/day</span>
+                                            </div>
+                                            {discount > 0 && (
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-[var(--primary)]">Discount ({discount}%):</span>
+                                                    <span className="font-bold text-[var(--primary)]">-${((numberOfDays * (scooter?.pricePerDay || 0)) * (discount / 100)).toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between text-lg border-t border-white/10 pt-2">
+                                                <span className="font-bold">Total:</span>
+                                                <span className="font-bold text-[var(--primary)]">${totalPrice.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Document Uploads */}
