@@ -171,7 +171,15 @@ export default function ScooterDetail() {
                                 )}
 
                                 <button
-                                    onClick={() => router.push(`/scooters/${id}/confirm`)}
+                                    onClick={() => {
+                                        if (selectedRange?.from && selectedRange?.to) {
+                                            const startDate = format(selectedRange.from, 'yyyy-MM-dd');
+                                            const endDate = format(selectedRange.to, 'yyyy-MM-dd');
+                                            router.push(`/scooters/${id}/confirm?startDate=${startDate}&endDate=${endDate}`);
+                                        } else {
+                                            router.push(`/scooters/${id}/confirm`);
+                                        }
+                                    }}
                                     disabled={!selectedRange?.from}
                                     className="w-full btn-primary flex items-center justify-center gap-2 py-4 disabled:opacity-50 disabled:hover:scale-100"
                                 >
