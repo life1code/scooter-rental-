@@ -319,6 +319,28 @@ export default function AdminDashboard() {
                                 <img src={selectedCustomer.documents?.idBack || "/images/id-back-template.png"} alt="ID Back" className="rounded-2xl border border-white/10" />
                             </div>
                         </div>
+                        <div className="p-6 border-t border-white/10 flex justify-end">
+                            <button
+                                onClick={() => generateRentalAgreement({
+                                    id: selectedCustomer.id,
+                                    rider: selectedCustomer.riderName,
+                                    bike: selectedCustomer.scooter?.name,
+                                    date: new Date(selectedCustomer.createdAt).toLocaleDateString(),
+                                    amount: `$${selectedCustomer.totalAmount}`,
+                                    details: {
+                                        passport: selectedCustomer.riderPassport,
+                                        phone: selectedCustomer.riderPhone,
+                                        idFront: selectedCustomer.documents?.idFront,
+                                        idBack: selectedCustomer.documents?.idBack,
+                                        passportImg: selectedCustomer.documents?.passport,
+                                        signature: selectedCustomer.documents?.signature
+                                    }
+                                })}
+                                className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-black font-bold rounded-xl hover:bg-[var(--primary)]/90 transition-colors"
+                            >
+                                <Download className="w-5 h-5" /> Download Agreement
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
