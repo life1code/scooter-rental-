@@ -77,5 +77,6 @@ tolerations: []
 
 nextauth:
   secret: "change-me-to-something-long-and-random"
+  baseUrl: "http://3.25.163.22:30080"
 
 affinity: {}

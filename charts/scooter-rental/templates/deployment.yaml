@@ -56,9 +56,9 @@ spec:
             - name: NEXTAUTH_SECRET
               value: {{ .Values.nextauth.secret | default "super-secret-placeholder" | quote }}
             - name: NEXTAUTH_URL
-              value: https://{{ (index .Values.ingress.hosts 0).host }}
+              value: {{ .Values.nextauth.baseUrl | default (printf "https://%s" (index .Values.ingress.hosts 0).host) | quote }}
             - name: NEXT_PUBLIC_BASE_URL
-              value: https://{{ (index .Values.ingress.hosts 0).host }}
+              value: {{ .Values.nextauth.baseUrl | default (printf "https://%s" (index .Values.ingress.hosts 0).host) | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
