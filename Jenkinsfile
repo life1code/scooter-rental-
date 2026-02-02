@@ -36,6 +36,7 @@ pipeline {
                     echo "Deploying to Kubernetes..."
                     sh """
                         helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
+                        --kubeconfig remote-kubeconfig.yaml \
                         --namespace ${K8S_NAMESPACE} \
                         --set image.repository=${REGISTRY}/scooter-rental-${env.BUILD_NUMBER} \
                         --set image.tag=2h \
