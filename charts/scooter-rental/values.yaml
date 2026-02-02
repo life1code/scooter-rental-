@@ -82,4 +82,4 @@ nextauth:
 affinity: {}
 
 database:
-  url: "postgresql://scooter_admin:ScooterPass2026!@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
+  url: "postgresql://scooter_admin:p%23fQxHzYHP@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
