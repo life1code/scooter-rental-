@@ -38,7 +38,8 @@ export const generateRentalAgreement = (booking: any) => {
     };
 
     addCompactSection("BOOKING & RIDER INFO", {
-        "Date": booking.date,
+        "Booking Date": booking.date,
+        "Rental Period": booking.rentalPeriod || "N/A",
         "Rider": booking.rider,
         "Scooter": booking.bike,
         "Amount": booking.amount,
@@ -74,6 +75,18 @@ export const generateRentalAgreement = (booking: any) => {
         addIdThumbnail(booking.details.passportImg, "PASSPORT");
     }
     y += photoHeight + 10;
+
+    // Add Passport Security Notice
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("PASSPORT SECURITY DEPOSIT NOTICE", 15, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    const noticeText = "The customer's passport will be collected as a security deposit and kept safely during the rental period. The passport will be returned to the customer upon the safe return of the scooter. In the event of any damage to the scooter at the time of return, the passport will be retained until the full compensation for the damage has been paid by the customer.";
+    const splitNotice = doc.splitTextToSize(noticeText, 180);
+    doc.text(splitNotice, 15, y);
+    y += splitNotice.length * 4 + 8;
 
     // Add Signature
     if (booking.details?.signature) {

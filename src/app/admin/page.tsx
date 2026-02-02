@@ -272,6 +272,7 @@ export default function AdminDashboard() {
                                                                 rider: booking.riderName,
                                                                 bike: booking.scooter?.name,
                                                                 date: new Date(booking.createdAt).toLocaleDateString(),
+                                                                rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
                                                                 amount: `$${booking.totalAmount}`,
                                                                 details: {
                                                                     passport: booking.riderPassport,
@@ -347,6 +348,7 @@ export default function AdminDashboard() {
                                     rider: selectedCustomer.riderName,
                                     bike: selectedCustomer.scooter?.name,
                                     date: new Date(selectedCustomer.createdAt).toLocaleDateString(),
+                                    rentalPeriod: `${new Date(selectedCustomer.startDate).toLocaleDateString()} - ${new Date(selectedCustomer.endDate).toLocaleDateString()}`,
                                     amount: `$${selectedCustomer.totalAmount}`,
                                     details: {
                                         passport: selectedCustomer.riderPassport,
