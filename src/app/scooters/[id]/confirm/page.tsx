@@ -156,7 +156,7 @@ export default function BookingConfirm() {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('API error:', errorData);
-                throw new Error(errorData.error || 'Failed to create booking');
+                throw new Error(`${errorData.error || 'Failed to create booking'} (Code: ${errorData.code || 'N/A'})`);
             }
 
             const savedBooking = await response.json();

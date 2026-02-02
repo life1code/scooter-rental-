@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         console.error("Error creating booking:", error);
         // Return actual error message for debugging
         return NextResponse.json(
-            { error: "Failed to create booking", details: error.message },
+            { error: "Failed to create booking", code: error.code, meta: error.meta, details: error.message },
             { status: 500 }
         );
     }
