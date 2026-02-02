@@ -9,10 +9,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
+import { useSearchParams } from "next/navigation";
 
 export default function BookingConfirm() {
     const { id } = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [scooter, setScooter] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitted, setIsSubmitted] = useState(false);
