@@ -30,6 +30,28 @@ pipeline {
             }
         }
 
+        stage('Infrastructure Setup') {
+            steps {
+                script {
+                    echo "Ensuring Cluster Dependencies (CSI Drivers)..."
+                    sh """
+                        helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts || true
+                        helm repo add aws-mountpoint-s3-csi-driver https://awslabs.github.io/mountpoint-s3-csi-driver || true
+                        helm repo update
+
+                        # Install Secrets Store CSI Driver
+                        helm upgrade --install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --namespace kube-system --set syncSecret.enabled=true
+                        
+                        # Install AWS Secrets Manager Provider
+                        kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/installer.yaml
+
+                        # Install S3 CSI Driver
+                        helm upgrade --install s3-csi-driver aws-mountpoint-s3-csi-driver/aws-mountpoint-s3-csi-driver --namespace kube-system
+                    """
+                }
+            }
+        }
+
         stage('Deploy with Helm') {
             steps {
                 script {
@@ -43,7 +65,8 @@ pipeline {
                         --namespace ${K8S_NAMESPACE} \
                         --set image.repository=${REGISTRY}/scooter-rental-${env.BUILD_NUMBER} \
                         --set image.tag=2h \
-                        --set image.pullPolicy=Always
+                        --set image.pullPolicy=Always \
+                        --disable-openapi-validation
                     """
                 }
             }
