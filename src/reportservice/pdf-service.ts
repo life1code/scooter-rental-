@@ -37,12 +37,16 @@ export const generateRentalAgreement = (booking: any) => {
         y += 2;
     };
 
+    const amountDisplay = booking.numberOfDays && booking.pricePerDay
+        ? `${booking.numberOfDays} days × $${booking.pricePerDay}/day = ${booking.amount}`
+        : booking.amount;
+
     addCompactSection("BOOKING & RIDER INFO", {
         "Booking Date": booking.date,
         "Rental Period": booking.rentalPeriod || "N/A",
         "Rider": booking.rider,
         "Scooter": booking.bike,
-        "Amount": booking.amount,
+        "Amount": amountDisplay,
         "Passport/IC": booking.details?.passport || "N/A",
         "Phone": booking.details?.phone || "N/A"
     });

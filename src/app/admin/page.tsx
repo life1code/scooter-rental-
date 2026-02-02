@@ -267,22 +267,31 @@ export default function AdminDashboard() {
                                                             <CheckCircle2 className="w-4 h-4" />
                                                         </button>
                                                         <button
-                                                            onClick={() => generateRentalAgreement({
-                                                                id: booking.id,
-                                                                rider: booking.riderName,
-                                                                bike: booking.scooter?.name,
-                                                                date: new Date(booking.createdAt).toLocaleDateString(),
-                                                                rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
-                                                                amount: `$${booking.totalAmount}`,
-                                                                details: {
-                                                                    passport: booking.riderPassport,
-                                                                    phone: booking.riderPhone,
-                                                                    idFront: booking.documents?.idFront,
-                                                                    idBack: booking.documents?.idBack,
-                                                                    passportImg: booking.documents?.passport,
-                                                                    signature: booking.documents?.signature
-                                                                }
-                                                            })}
+                                                            onClick={() => {
+                                                                const start = new Date(booking.startDate);
+                                                                const end = new Date(booking.endDate);
+                                                                const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                                                                const pricePerDay = booking.scooter?.pricePerDay || 0;
+
+                                                                generateRentalAgreement({
+                                                                    id: booking.id,
+                                                                    rider: booking.riderName,
+                                                                    bike: booking.scooter?.name,
+                                                                    date: new Date(booking.createdAt).toLocaleDateString(),
+                                                                    rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
+                                                                    amount: `$${booking.totalAmount}`,
+                                                                    numberOfDays: days,
+                                                                    pricePerDay: pricePerDay,
+                                                                    details: {
+                                                                        passport: booking.riderPassport,
+                                                                        phone: booking.riderPhone,
+                                                                        idFront: booking.documents?.idFront,
+                                                                        idBack: booking.documents?.idBack,
+                                                                        passportImg: booking.documents?.passport,
+                                                                        signature: booking.documents?.signature
+                                                                    }
+                                                                });
+                                                            }}
                                                             className="p-2 hover:bg-white/10 rounded-lg text-blue-500 transition-colors"
                                                             title="Download Agreement"
                                                         >
@@ -343,22 +352,31 @@ export default function AdminDashboard() {
                         </div>
                         <div className="p-6 border-t border-white/10 flex justify-end">
                             <button
-                                onClick={() => generateRentalAgreement({
-                                    id: selectedCustomer.id,
-                                    rider: selectedCustomer.riderName,
-                                    bike: selectedCustomer.scooter?.name,
-                                    date: new Date(selectedCustomer.createdAt).toLocaleDateString(),
-                                    rentalPeriod: `${new Date(selectedCustomer.startDate).toLocaleDateString()} - ${new Date(selectedCustomer.endDate).toLocaleDateString()}`,
-                                    amount: `$${selectedCustomer.totalAmount}`,
-                                    details: {
-                                        passport: selectedCustomer.riderPassport,
-                                        phone: selectedCustomer.riderPhone,
-                                        idFront: selectedCustomer.documents?.idFront,
-                                        idBack: selectedCustomer.documents?.idBack,
-                                        passportImg: selectedCustomer.documents?.passport,
-                                        signature: selectedCustomer.documents?.signature
-                                    }
-                                })}
+                                onClick={() => {
+                                    const start = new Date(selectedCustomer.startDate);
+                                    const end = new Date(selectedCustomer.endDate);
+                                    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                                    const pricePerDay = selectedCustomer.scooter?.pricePerDay || 0;
+
+                                    generateRentalAgreement({
+                                        id: selectedCustomer.id,
+                                        rider: selectedCustomer.riderName,
+                                        bike: selectedCustomer.scooter?.name,
+                                        date: new Date(selectedCustomer.createdAt).toLocaleDateString(),
+                                        rentalPeriod: `${new Date(selectedCustomer.startDate).toLocaleDateString()} - ${new Date(selectedCustomer.endDate).toLocaleDateString()}`,
+                                        amount: `$${selectedCustomer.totalAmount}`,
+                                        numberOfDays: days,
+                                        pricePerDay: pricePerDay,
+                                        details: {
+                                            passport: selectedCustomer.riderPassport,
+                                            phone: selectedCustomer.riderPhone,
+                                            idFront: selectedCustomer.documents?.idFront,
+                                            idBack: selectedCustomer.documents?.idBack,
+                                            passportImg: selectedCustomer.documents?.passport,
+                                            signature: selectedCustomer.documents?.signature
+                                        }
+                                    });
+                                }}
                                 className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-black font-bold rounded-xl hover:bg-[var(--primary)]/90 transition-colors"
                             >
                                 <Download className="w-5 h-5" /> Download Agreement

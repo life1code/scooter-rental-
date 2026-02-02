@@ -23,6 +23,53 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // Check for date conflicts
+        const requestedStart = new Date(body.startDate);
+        const requestedEnd = new Date(body.endDate);
+
+        const conflictingBookings = await prisma.booking.findMany({
+            where: {
+                scooterId: body.scooterId,
+                status: {
+                    in: ['Pending', 'Active']
+                },
+                OR: [
+                    {
+                        AND: [
+                            { startDate: { lte: requestedStart } },
+                            { endDate: { gte: requestedStart } }
+                        ]
+                    },
+                    {
+                        AND: [
+                            { startDate: { lte: requestedEnd } },
+                            { endDate: { gte: requestedEnd } }
+                        ]
+                    },
+                    {
+                        AND: [
+                            { startDate: { gte: requestedStart } },
+                            { endDate: { lte: requestedEnd } }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        if (conflictingBookings.length > 0) {
+            return NextResponse.json(
+                {
+                    error: "Scooter is not available for the selected dates",
+                    code: "BOOKING_CONFLICT",
+                    conflictingBookings: conflictingBookings.map(b => ({
+                        startDate: b.startDate,
+                        endDate: b.endDate
+                    }))
+                },
+                { status: 409 }
+            );
+        }
+
         const booking = await prisma.booking.create({
             data: {
                 scooterId: body.scooterId,
