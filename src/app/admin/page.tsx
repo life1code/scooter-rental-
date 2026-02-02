@@ -266,6 +266,27 @@ export default function AdminDashboard() {
                                                         >
                                                             <CheckCircle2 className="w-4 h-4" />
                                                         </button>
+                                                        <button
+                                                            onClick={() => generateRentalAgreement({
+                                                                id: booking.id,
+                                                                rider: booking.riderName,
+                                                                bike: booking.scooter?.name,
+                                                                date: new Date(booking.createdAt).toLocaleDateString(),
+                                                                amount: `$${booking.totalAmount}`,
+                                                                details: {
+                                                                    passport: booking.riderPassport,
+                                                                    phone: booking.riderPhone,
+                                                                    idFront: booking.documents?.idFront,
+                                                                    idBack: booking.documents?.idBack,
+                                                                    passportImg: booking.documents?.passport,
+                                                                    signature: booking.documents?.signature
+                                                                }
+                                                            })}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-blue-500 transition-colors"
+                                                            title="Download Agreement"
+                                                        >
+                                                            <Download className="w-4 h-4" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
