@@ -44,53 +44,45 @@ export default function CustomerManagement() {
             return;
         }
 
-        // Load static + dynamic customers
-        const staticCustomers: Customer[] = [
-            {
-                id: "CUST-001",
-                name: "Alex Smith",
-                email: "alex@example.com",
-                passportNumber: "N1234567",
-                status: 'Verified',
-                joinDate: "Jan 15, 2026",
-                idFront: "/images/id-front-template.png",
-                idBack: "/images/id-back-template.png"
-            },
-            {
-                id: "CUST-002",
-                name: "Maria Garcia",
-                email: "maria@example.com",
-                passportNumber: "P8829102",
-                status: 'Pending',
-                joinDate: "Jan 28, 2026",
-                idFront: "/images/id-front-template.png",
-                idBack: "/images/id-back-template.png"
-            },
-            {
-                id: "CUST-003",
-                name: "James Wilson",
-                email: "james@example.com",
-                passportNumber: "L0091823",
-                status: 'Verified',
-                joinDate: "Jan 30, 2026",
-                idFront: "/images/id-front-template.png",
-                idBack: "/images/id-back-template.png"
+        async function fetchCustomers() {
+            try {
+                const res = await fetch('/api/bookings');
+                if (res.ok) {
+                    const dbBookings = await res.json();
+
+                    const dynamicCustomers: Customer[] = dbBookings.map((b: any) => ({
+                        id: b.id,
+                        name: b.riderName || "Unknown Rider",
+                        email: b.riderEmail || (b.riderName ? `${b.riderName.toLowerCase().replace(/\s+/g, '.')}@example.com` : "no-email@example.com"),
+                        passportNumber: b.riderPassport || "N/A",
+                        status: b.verificationStatus || 'Pending',
+                        joinDate: new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        idFront: b.documents?.idFront || "/images/id-front-template.png",
+                        idBack: b.documents?.idBack || "/images/id-back-template.png"
+                    }));
+
+                    // Load static customers
+                    const staticCustomers: Customer[] = [
+                        {
+                            id: "CUST-001",
+                            name: "Alex Smith",
+                            email: "alex@example.com",
+                            passportNumber: "N1234567",
+                            status: 'Verified',
+                            joinDate: "Jan 15, 2026",
+                            idFront: "/images/id-front-template.png",
+                            idBack: "/images/id-back-template.png"
+                        }
+                    ];
+
+                    setCustomers([...dynamicCustomers, ...staticCustomers]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch customers:", error);
             }
-        ];
+        }
 
-        const recentBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
-        const dynamicCustomers: Customer[] = recentBookings.map((b: any) => ({
-            id: b.id,
-            name: b.rider,
-            email: `${b.rider.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-            passportNumber: b.details?.passport || "N/A",
-            status: b.verificationStatus || 'Pending',
-            joinDate: b.date,
-            idFront: b.details?.idFront || "/images/id-front-template.png",
-            idBack: b.details?.idBack || "/images/id-back-template.png"
-        }));
-
-        setCustomers([...dynamicCustomers, ...staticCustomers]);
+        fetchCustomers();
     }, [router]);
 
     const filteredCustomers = customers.filter(c =>

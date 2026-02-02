@@ -21,7 +21,8 @@ import Link from "next/link";
 export default function FleetManagement() {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
-    const [allScooters, setAllScooters] = useState(SCOOTERS);
+    const [allScooters, setAllScooters] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Initial check for admin session
     useEffect(() => {
@@ -32,13 +33,24 @@ export default function FleetManagement() {
 
         async function fetchFleet() {
             try {
+                setIsLoading(true);
                 const res = await fetch('/api/scooters');
                 if (res.ok) {
                     const data = await res.json();
-                    setAllScooters(data);
+                    if (data && data.length > 0) {
+                        setAllScooters(data);
+                    } else {
+                        // If DB is empty, show static template scooters
+                        setAllScooters(SCOOTERS);
+                    }
+                } else {
+                    setAllScooters(SCOOTERS);
                 }
             } catch (error) {
                 console.error("Failed to fetch fleet:", error);
+                setAllScooters(SCOOTERS);
+            } finally {
+                setIsLoading(false);
             }
         }
 
