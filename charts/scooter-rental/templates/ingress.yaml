@@ -38,7 +38,8 @@ spec:
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    {{- $host := .host -}}
+    - host: {{ $host | quote }}
       http:
         paths:
           {{- range .paths }}
@@ -49,12 +50,12 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ if contains "adminer" .host }}adminer{{ else }}{{ $fullName }}{{ end }}
+                name: {{ if contains "adminer" $host }}adminer{{ else }}{{ $fullName }}{{ end }}
                 port:
-                  number: {{ if contains "adminer" .host }}8080{{ else }}{{ $svcPort }}{{ end }}
+                  number: {{ if contains "adminer" $host }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- else }}
-              serviceName: {{ if contains "adminer" .host }}adminer{{ else }}{{ $fullName }}{{ end }}
-              servicePort: {{ if contains "adminer" .host }}8080{{ else }}{{ $svcPort }}{{ end }}
+              serviceName: {{ if contains "adminer" $host }}adminer{{ else }}{{ $fullName }}{{ end }}
+              servicePort: {{ if contains "adminer" $host }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- end }}
           {{- end }}
     {{- end }}

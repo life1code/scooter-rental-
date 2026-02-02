@@ -21,7 +21,7 @@ chmod 400 scooter-key.pem
 
 Then SSH into your new instance:
 ```bash
-ssh -i "scooter-key.pem" ubuntu@16.176.139.80
+ssh -i "scooter-key.pem" ubuntu@3.25.163.22
 ```
 
 Run the following commands to install dependencies:
@@ -98,7 +98,7 @@ For the agent to deploy to your cluster (e.g., EKS or Minikube), it needs a `~/.
 ## Step 6: Accessing Jenkins (Setup Complete)
 Your Jenkins is now running!
 
-**Jenkins URL**: `http://16.176.139.80:8080`
+**Jenkins URL**: `http://3.25.163.22:8080`
 **Initial Admin Password**: `829634c21f11418ca45cd6ab561d2da0`
 
 ### Pipeline Configuration
@@ -107,7 +107,7 @@ Your Jenkins is now running!
 
 ## Step 7: Accessing Your App
 Once the pipeline deploys successfully:
-**App URL**: `http://16.176.139.80:30080`
+**App URL**: `http://3.25.163.22:30080`
 
 ## Database (RDS)
 Your Database `scooter-db` is active.
