@@ -43,7 +43,7 @@ pipeline {
                         helm upgrade --install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --namespace kube-system --set syncSecret.enabled=true
                         
                         # Install AWS Secrets Manager Provider
-                        kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/installer.yaml
+                        kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
 
                         # Install S3 CSI Driver
                         helm upgrade --install s3-csi-driver aws-mountpoint-s3-csi-driver/aws-mountpoint-s3-csi-driver --namespace kube-system
