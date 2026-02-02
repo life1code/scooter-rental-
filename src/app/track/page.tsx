@@ -4,10 +4,11 @@ import { Navbar } from "@/frontend/components/Navbar";
 import {
     MapPin, Navigation, ChevronLeft, Battery, Radio,
     ShieldCheck, User, Phone, Info, MessageSquare,
-    Wrench, AlertTriangle, HelpCircle, Bike, CreditCard
+    Wrench, AlertTriangle, HelpCircle, Bike, CreditCard, X
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 const TROUBLESHOOT_GUIDES = {
     start: {
@@ -42,26 +43,109 @@ const TROUBLESHOOT_GUIDES = {
     }
 };
 
-export default function MyBookingsPage() {
+function MyBookingsContent() {
+    const searchParams = useSearchParams();
+    const bookingId = searchParams.get("id");
     const [booking, setBooking] = useState<any>(null);
     const [activeGuide, setActiveGuide] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const handleNotifyOwner = () => {
         if (!booking || !activeGuide) return;
 
-        const message = `Hi ${booking.ownerName}, I am ${booking.rider} currently renting your ${booking.bike}. I am experiencing an issue: "${activeGuide.title}". Could you please assist me? My location is currently near ${booking.location}.`;
+        const message = `Hi ${booking.scooter?.ownerName || "Owner"}, I am ${booking.riderName} currently renting your ${booking.scooter?.name}. I am experiencing an issue: "${activeGuide.title}". Could you please assist me? My location is currently near ${booking.scooter?.location}.`;
         const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/${booking.ownerWhatsapp?.replace('+', '')}?text=${encodedMessage}`;
+        const whatsappUrl = `https://wa.me/${(booking.scooter?.ownerWhatsapp || "+94700000000").replace('+', '')}?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');
     };
 
+    const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [mapLoaded, setMapLoaded] = useState(false);
+
+    // Dynamic import for Leaflet (client-side only)
     useEffect(() => {
-        const bookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
-        if (bookings.length > 0) {
-            setBooking(bookings[0]); // Show the most recent one
+        if (typeof window !== 'undefined') {
+            setMapLoaded(true);
         }
     }, []);
+
+    useEffect(() => {
+        async function fetchBooking() {
+            setIsLoading(true);
+            try {
+                // Priority 1: ID from URL
+                if (bookingId) {
+                    const res = await fetch(`/api/bookings/${bookingId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setBooking(data);
+                        return;
+                    }
+                }
+
+                // Priority 2: Local Storage
+                const localBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
+                if (localBookings.length > 0) {
+                    const res = await fetch(`/api/bookings/${localBookings[0].id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setBooking(data);
+                    } else {
+                        // Fallback to local data if API fails but we have some info
+                        setBooking({
+                            ...localBookings[0],
+                            scooter: {
+                                name: localBookings[0].bike,
+                                location: localBookings[0].location,
+                                image: localBookings[0].scooterImage
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch booking:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchBooking();
+    }, [bookingId]);
+
+    // Geolocation Tracking
+    useEffect(() => {
+        if (!booking || !('geolocation' in navigator)) return;
+
+        const watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setLocation({ lat: latitude, lng: longitude });
+
+                // Update backend
+                fetch(`/api/bookings/${booking.id}/location`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat: latitude, lng: longitude })
+                }).catch(err => console.error("Failed to update location to server:", err));
+            },
+            (error) => console.error("Geolocation error:", error),
+            { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        );
+
+        return () => navigator.geolocation.clearWatch(watchId);
+    }, [booking]);
+
+    if (isLoading) {
+        return (
+            <main className="min-h-screen bg-[var(--background)]">
+                <Navbar />
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            </main>
+        );
+    }
 
     if (!booking) {
         return (
@@ -83,12 +167,54 @@ export default function MyBookingsPage() {
         );
     }
 
+    // Map Component (rendered only on client)
+    const MapDisplay = () => {
+        if (!mapLoaded || !location) return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-4">
+                <div className="w-10 h-10 border-t-2 border-b-2 border-[var(--primary)] rounded-full animate-spin"></div>
+                <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Awaiting GPS Signal...</p>
+            </div>
+        );
+
+        const { MapContainer, TileLayer, Marker, Popup, useMap } = require('react-leaflet');
+        const L = require('leaflet');
+
+        const icon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41]
+        });
+
+        const RecenterMap = ({ coords }: { coords: { lat: number; lng: number } }) => {
+            const map = useMap();
+            map.setView([coords.lat, coords.lng], 15);
+            return null;
+        };
+
+        return (
+            <div className="w-full h-full">
+                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                <style>{`
+                    .leaflet-container { background: #0a0c0f !important; }
+                    .leaflet-tile { filter: grayscale(1) invert(1) opacity(0.2); }
+                `}</style>
+                <MapContainer center={[location.lat, location.lng]} zoom={15} className="w-full h-full">
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker position={[location.lat, location.lng]} icon={icon}>
+                        <Popup>Your current position</Popup>
+                    </Marker>
+                    <RecenterMap coords={location} />
+                </MapContainer>
+            </div>
+        );
+    };
+
     return (
         <main className="min-h-screen bg-[var(--background)] pb-20">
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 pt-12 space-y-10">
-                {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-2">
                         <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-2">
@@ -130,12 +256,8 @@ export default function MyBookingsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Column: Details (8 cols) */}
                     <div className="lg:col-span-8 space-y-8">
-
-                        {/* 1. Rider & Scooter Details Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Rider Card */}
                             <div className="glass-card p-6 md:p-8 space-y-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <User className="w-4 h-4 text-[var(--primary)]" />
@@ -148,7 +270,7 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-white/40 uppercase font-bold">Full Name</p>
-                                            <p className="font-bold">{booking.riderName || booking.rider}</p>
+                                            <p className="font-bold">{booking.riderName}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -157,7 +279,7 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-white/40 uppercase font-bold">WhatsApp</p>
-                                            <p className="font-bold">{booking.riderPhone || booking.details?.phone}</p>
+                                            <p className="font-bold">{booking.riderPhone}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -166,13 +288,12 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-white/40 uppercase font-bold">Passport / ID</p>
-                                            <p className="font-bold">{booking.riderPassport || booking.details?.passport}</p>
+                                            <p className="font-bold">{booking.riderPassport}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Scooter Card */}
                             <div className="glass-card p-6 md:p-8 space-y-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Bike className="w-4 h-4 text-[var(--primary)]" />
@@ -180,22 +301,22 @@ export default function MyBookingsPage() {
                                 </div>
                                 <div className="flex gap-4 mb-4">
                                     <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/10 shrink-0">
-                                        <img src={booking.scooterImage || "/images/pcx.jpeg"} alt="" className="w-full h-full object-cover" />
+                                        <img src={booking.scooter?.image || "/images/pcx.jpeg"} alt="" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-xl">{booking.bike}</h4>
-                                        <p className="text-sm text-white/40 mb-2">{booking.location} Station</p>
-                                        <p className="text-lg font-bold text-[var(--primary)]">${booking.pricePerDay}<span className="text-[10px] text-white/40 ml-1">/ day</span></p>
+                                        <h4 className="font-bold text-xl">{booking.scooter?.name}</h4>
+                                        <p className="text-sm text-white/40 mb-2">{booking.scooter?.location} Station</p>
+                                        <p className="text-lg font-bold text-[var(--primary)]">${booking.scooter?.pricePerDay}<span className="text-[10px] text-white/40 ml-1">/ day</span></p>
                                     </div>
                                 </div>
                                 <div className="pt-4 border-t border-white/5 flex justify-between">
                                     <div className="text-center px-4">
                                         <p className="text-[10px] text-white/40 font-bold uppercase">Pickup</p>
-                                        <p className="text-xs font-bold">{booking.location}</p>
+                                        <p className="text-xs font-bold">{booking.scooter?.location}</p>
                                     </div>
                                     <div className="text-center px-4 border-x border-white/5">
                                         <p className="text-[10px] text-white/40 font-bold uppercase">Rate</p>
-                                        <p className="text-xs font-bold">${booking.pricePerDay}/day</p>
+                                        <p className="text-xs font-bold">${booking.scooter?.pricePerDay}/day</p>
                                     </div>
                                     <div className="text-center px-4">
                                         <p className="text-[10px] text-white/40 font-bold uppercase">Insurance</p>
@@ -205,33 +326,25 @@ export default function MyBookingsPage() {
                             </div>
                         </div>
 
-                        {/* 2. Map Visualization - Smaller now but still here */}
                         <div className="glass-card relative overflow-hidden aspect-video border-[var(--primary)]/10">
-                            <div className="absolute inset-0 bg-[#1e2124]">
-                                <div className="absolute inset-0 opacity-40 bg-[url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/80.4578,5.9463,14,0/800x600?access_token=none')] bg-cover bg-center"></div>
-                                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 800 600">
-                                    <path d="M100,500 L200,450 L350,400 L500,300 L650,250" fill="none" stroke="var(--primary)" strokeWidth="4" strokeDasharray="8 4" className="animate-pulse" />
-                                    <circle cx="650" cy="250" r="10" fill="var(--secondary)" className="animate-bounce" />
-                                    <circle cx="650" cy="250" r="20" fill="var(--secondary)" className="animate-ping opacity-30" />
-                                </svg>
-                            </div>
-                            <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+                            <MapDisplay />
+                            <div className="absolute top-4 left-4 z-[1000] bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                                 <span className="text-[10px] font-bold uppercase tracking-widest">Live GPS Position</span>
                             </div>
-                            <div className="absolute bottom-4 right-4 flex gap-2">
-                                <button className="bg-black/80 p-2 rounded-lg border border-white/10 hover:border-[var(--primary)] transition-colors">
+                            <div className="absolute bottom-4 right-4 z-[1000] flex gap-2">
+                                <button
+                                    onClick={() => location && setLocation({ ...location })}
+                                    className="bg-black/80 p-2 rounded-lg border border-white/10 hover:border-[var(--primary)] transition-colors"
+                                >
                                     <Navigation className="w-4 h-4" />
                                 </button>
-                                <button className="bg-black/80 p-2 rounded-lg border border-white/10 hover:border-[var(--primary)] transition-colors font-bold text-[10px]">RECENTER</button>
+                                <button className="bg-black/80 p-2 rounded-lg border border-white/10 hover:border-[var(--primary)] transition-colors font-bold text-[10px] px-3">RECENTER</button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Owner & Troubleshooting (4 cols) */}
                     <div className="lg:col-span-4 space-y-8">
-
-                        {/* Owner Card */}
                         <div className="glass-card p-6 md:p-8 space-y-8 border-[var(--primary)]/20 shadow-xl">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/20 flex items-center justify-center border border-[var(--primary)]/30">
@@ -239,7 +352,7 @@ export default function MyBookingsPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Scooter Owner</h3>
-                                    <p className="text-xl font-bold">{booking.ownerName || "Ride Owner"}</p>
+                                    <p className="text-xl font-bold">{booking.scooter?.ownerName || "Ride Owner"}</p>
                                 </div>
                             </div>
 
@@ -248,20 +361,15 @@ export default function MyBookingsPage() {
                                     If you need to coordinate the pickup or have any questions about the ride, contact the owner directly.
                                 </p>
                                 <button
-                                    onClick={() => window.open(`https://wa.me/${booking.ownerWhatsapp?.replace('+', '')}`, '_blank')}
+                                    onClick={() => window.open(`https://wa.me/${(booking.scooter?.ownerWhatsapp || "").replace('+', '')}`, '_blank')}
                                     className="w-full bg-green-500 hover:bg-green-600 text-white !py-4 rounded-2xl flex items-center justify-center gap-3 transition-all font-bold shadow-[0_0_20px_rgba(34,197,94,0.3)]"
                                 >
                                     <Phone className="w-5 h-5" />
                                     <span>Chat with Owner</span>
                                 </button>
-                                <div className="flex justify-between items-center text-[10px] text-white/20 uppercase font-bold tracking-widest pt-2">
-                                    <span>Typically Responds in</span>
-                                    <span className="text-green-500/50">5 Minutes</span>
-                                </div>
                             </div>
                         </div>
 
-                        {/* Troubleshooting Box */}
                         <div className="glass-card p-6 md:p-8 space-y-6 border-orange-500/20 bg-orange-500/5">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
@@ -271,38 +379,21 @@ export default function MyBookingsPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <button
-                                    onClick={() => setActiveGuide(TROUBLESHOOT_GUIDES.start)}
-                                    className="w-full p-4 rounded-xl bg-white/5 border border-white/5 text-left hover:bg-white/10 transition-all flex items-center justify-between group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <HelpCircle className="w-4 h-4 text-white/20 group-hover:text-[var(--primary)]" />
-                                        <span className="text-xs font-bold">Scooter won't start?</span>
-                                    </div>
-                                    <ChevronLeft className="w-3 h-3 rotate-180 opacity-20" />
-                                </button>
-                                <button
-                                    onClick={() => setActiveGuide(TROUBLESHOOT_GUIDES.gps)}
-                                    className="w-full p-4 rounded-xl bg-white/5 border border-white/5 text-left hover:bg-white/10 transition-all flex items-center justify-between group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <AlertTriangle className="w-4 h-4 text-white/20 group-hover:text-orange-500" />
-                                        <span className="text-xs font-bold">GPS signal lost?</span>
-                                    </div>
-                                    <ChevronLeft className="w-3 h-3 rotate-180 opacity-20" />
-                                </button>
-                                <button
-                                    onClick={() => setActiveGuide(TROUBLESHOOT_GUIDES.emergency)}
-                                    className="w-full p-4 rounded-xl bg-orange-500/20 border border-orange-500/30 text-left hover:bg-orange-500/30 transition-all flex items-center justify-between group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Info className="w-4 h-4 text-orange-500" />
-                                        <span className="text-xs font-bold text-orange-500 uppercase tracking-widest">Report Emergency</span>
-                                    </div>
-                                </button>
+                                {Object.entries(TROUBLESHOOT_GUIDES).map(([key, guide]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setActiveGuide(guide)}
+                                        className="w-full p-4 rounded-xl bg-white/5 border border-white/5 text-left hover:bg-white/10 transition-all flex items-center justify-between group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {key === 'gps' ? <AlertTriangle className="w-4 h-4 text-white/20 group-hover:text-orange-500" /> : <HelpCircle className="w-4 h-4 text-white/20 group-hover:text-[var(--primary)]" />}
+                                            <span className="text-xs font-bold">{guide.title}</span>
+                                        </div>
+                                        <ChevronLeft className="w-3 h-3 rotate-180 opacity-20" />
+                                    </button>
+                                ))}
                             </div>
 
-                            {/* Troubleshoot Modal/Overlay */}
                             {activeGuide && (
                                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--background)]/80 backdrop-blur-sm animate-in fade-in">
                                     <div className="glass-card max-w-sm w-full p-8 space-y-6 relative border-[var(--primary)]/20 shadow-2xl animate-in zoom-in-95">
@@ -310,7 +401,7 @@ export default function MyBookingsPage() {
                                             onClick={() => setActiveGuide(null)}
                                             className="absolute top-4 right-4 p-2 hover:bg-white/5 rounded-full text-white/40"
                                         >
-                                            <ChevronLeft className="w-5 h-5 rotate-90" />
+                                            <X className="w-5 h-5" />
                                         </button>
 
                                         <div className="flex items-center gap-3">
@@ -329,33 +420,34 @@ export default function MyBookingsPage() {
                                             ))}
                                         </div>
 
-                                        <div className="flex flex-col gap-3">
-                                            <button
-                                                onClick={handleNotifyOwner}
-                                                className="w-full bg-green-500 hover:bg-green-600 text-white !py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-bold shadow-[0_0_15px_rgba(34,197,94,0.2)]"
-                                            >
-                                                <MessageSquare className="w-4 h-4" />
-                                                Notify Owner via WhatsApp
-                                            </button>
-                                            <button
-                                                onClick={() => setActiveGuide(null)}
-                                                className="w-full bg-white/5 hover:bg-white/10 text-white/60 !py-3 rounded-xl transition-all font-bold"
-                                            >
-                                                Got it, I'll try these steps
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={handleNotifyOwner}
+                                            className="w-full bg-green-500 hover:bg-green-600 text-white !py-3 rounded-xl transition-all font-bold"
+                                        >
+                                            Notify Owner
+                                        </button>
                                     </div>
                                 </div>
                             )}
-
-                            <p className="text-[10px] text-white/20 text-center italic">
-                                Support is available 24/7.
-                            </p>
                         </div>
-
                     </div>
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function MyBookingsPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen bg-[var(--background)]">
+                <Navbar />
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            </main>
+        }>
+            <MyBookingsContent />
+        </Suspense>
     );
 }

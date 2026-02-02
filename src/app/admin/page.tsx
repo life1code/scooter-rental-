@@ -37,9 +37,62 @@ interface Booking {
     amount: string;
 }
 
+const TrackingMap = ({ activeBookings }: { activeBookings: any[] }) => {
+    const [mapLoaded, setMapLoaded] = useState(false);
+
+    useEffect(() => {
+        setMapLoaded(true);
+    }, []);
+
+    if (!mapLoaded) return (
+        <div className="w-full h-[400px] flex items-center justify-center bg-white/5 rounded-2xl border border-white/10">
+            <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    );
+
+    const { MapContainer, TileLayer, Marker, Popup } = require('react-leaflet');
+    const L = require('leaflet');
+
+    const icon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41]
+    });
+
+    const activeWithGPS = activeBookings.filter(b => b.lastLat && b.lastLng);
+
+    return (
+        <div className="w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 relative z-10">
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+            <style>{`
+                .leaflet-container { background: #0a0c0f !important; }
+                .leaflet-tile { filter: grayscale(1) invert(1) opacity(0.2); }
+            `}</style>
+            <MapContainer center={[6.0022, 80.2484]} zoom={13} className="w-full h-full">
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {activeWithGPS.map((booking) => (
+                    <Marker key={booking.id} position={[booking.lastLat, booking.lastLng]} icon={icon}>
+                        <Popup>
+                            <div className="text-black">
+                                <p className="font-bold">{booking.riderName}</p>
+                                <p className="text-xs">{booking.scooter?.name}</p>
+                                <p className="text-[10px] uppercase font-bold text-blue-600">{booking.status}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+            </MapContainer>
+        </div>
+    );
+};
+
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [bookings, setBookings] = useState<any[]>([]);
+    const [stats, setStats] = useState<any[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
     useEffect(() => {
         const isLocalAdmin = localStorage.getItem("is_host_admin") === "true";
@@ -50,107 +103,52 @@ export default function AdminDashboard() {
         }
     }, [status, session, router]);
 
-    const [bookings, setBookings] = useState<Booking[]>([
-        { id: "BK-9021", rider: "Alex Smith", bike: "Honda PCX 160", date: "Today, 10:30 AM", status: "Pending", amount: "$45.00" },
-        { id: "BK-9020", rider: "Maria Garcia", bike: "Yamaha XMAX", date: "Yesterday", status: "Active", amount: "$120.00" },
-        { id: "BK-9019", rider: "James Wilson", bike: "TVS NTORQ", date: "Jan 30, 2026", status: "Completed", amount: "$30.00" },
-    ]);
+    const fetchBookings = async () => {
+        try {
+            const res = await fetch('/api/bookings');
+            if (res.ok) {
+                const dbBookings = await res.json();
+                setBookings(dbBookings);
+            }
+        } catch (error) {
+            console.error("Failed to fetch bookings:", error);
+        }
+    };
 
     useEffect(() => {
-        async function fetchBookings() {
-            try {
-                const res = await fetch('/api/bookings');
-                if (res.ok) {
-                    const dbBookings = await res.json();
-
-                    // Transform DB booking format to UI format if needed
-                    const formattedDbBookings = dbBookings.map((b: any) => ({
-                        id: b.id,
-                        rider: b.riderName,
-                        bike: b.scooter?.name || "Unknown Scooter",
-                        date: new Date(b.createdAt).toLocaleDateString(),
-                        status: b.status,
-                        amount: `$${b.totalAmount}`,
-                        details: {
-                            passport: b.riderPassport,
-                            phone: b.riderPhone,
-                            idFront: b.documents?.idFront || "/images/id-front-template.png",
-                            idBack: b.documents?.idBack || "/images/id-back-template.png",
-                            passportImg: b.documents?.passport || null,
-                            signature: b.documents?.signature || null
-                        }
-                    }));
-
-                    setBookings(prev => {
-                        // Merge db bookings with existing static/local ones
-                        // prioritizing DB ones
-                        const combined = [...formattedDbBookings, ...prev];
-                        const seen = new Set();
-                        return combined.filter(b => {
-                            if (seen.has(b.id)) return false;
-                            seen.add(b.id);
-                            return true;
-                        });
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to fetch bookings:", error);
-            }
-        }
-
         fetchBookings();
-
-        // Keep localStorage as secondary source for now
-        const recentBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
-        if (recentBookings.length > 0) {
-            setBookings(prev => {
-                const combined = [...recentBookings, ...prev];
-                const seen = new Set();
-                return combined.filter(b => {
-                    if (seen.has(b.id)) return false;
-                    seen.add(b.id);
-                    return true;
-                });
-            });
-        }
+        const interval = setInterval(fetchBookings, 10000); // Poll every 10s for GPS updates
+        return () => clearInterval(interval);
     }, []);
 
-    const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+    useEffect(() => {
+        const activeCount = bookings.filter(b => b.status === "Active").length;
+        const pendingCount = bookings.filter(b => b.status === "Pending").length;
+        const totalRevenue = bookings.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
 
-    const handleDownload = (booking: any) => {
-        generateRentalAgreement(booking);
+        setStats([
+            { label: "Total Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-green-500", bg: "bg-green-500/10" },
+            { label: "Active Rentals", value: activeCount, icon: Bike, color: "text-[var(--primary)]", bg: "bg-[var(--primary)]/10" },
+            { label: "Pending Requests", value: pendingCount, icon: Clock, color: "text-[var(--secondary)]", bg: "bg-[var(--secondary)]/10" },
+            { label: "Total Bookings", value: bookings.length, icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
+        ]);
+    }, [bookings]);
+
+    const handleAction = async (id: string, newStatus: string) => {
+        try {
+            const res = await fetch(`/api/bookings/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (res.ok) {
+                fetchBookings();
+            }
+        } catch (error) {
+            console.error("Failed to update status:", error);
+        }
     };
-
-    const handleAction = (id: string, newStatus: string) => {
-        let updatedBookings;
-        if (newStatus === 'Delete') {
-            updatedBookings = bookings.filter(b => b.id !== id);
-        } else {
-            updatedBookings = bookings.map(b => b.id === id ? { ...b, status: newStatus } : b);
-        }
-        setBookings(updatedBookings);
-
-        // Update localStorage as well
-        const recentBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
-        if (newStatus === 'Delete') {
-            localStorage.setItem("recent_bookings", JSON.stringify(recentBookings.filter((b: any) => b.id !== id)));
-        } else {
-            localStorage.setItem("recent_bookings", JSON.stringify(recentBookings.map((b: any) => b.id === id ? { ...b, status: newStatus } : b)));
-        }
-
-        // Simulate sending approval email
-        if (newStatus === 'Active') {
-            const booking = bookings.find(b => b.id === id);
-            if (booking) simulateEmailNotification('approval', booking);
-        }
-    };
-
-    const stats = [
-        { label: "Total Revenue", value: "$4,285", icon: DollarSign, color: "text-green-500", bg: "bg-green-500/10" },
-        { label: "Active Rentals", value: bookings.filter((b: Booking) => b.status === "Active").length + 11, icon: Bike, color: "text-[var(--primary)]", bg: "bg-[var(--primary)]/10" },
-        { label: "Pending Requests", value: bookings.filter((b: Booking) => b.status === "Pending").length, icon: Clock, color: "text-[var(--secondary)]", bg: "bg-[var(--secondary)]/10" },
-        { label: "Total Customers", value: "89", icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
-    ];
 
     return (
         <main className="min-h-screen bg-[var(--background)] pb-20">
@@ -163,6 +161,9 @@ export default function AdminDashboard() {
                         <p className="text-white/40">Manage your fleet, bookings, and revenue.</p>
                     </div>
                     <div className="flex flex-wrap gap-3">
+                        <Link href="/track" className="btn-secondary !bg-blue-500/10 !text-blue-500 !border-blue-500/20 flex items-center justify-center gap-2 !py-2.5 flex-1 min-w-[140px] md:flex-none">
+                            <Navigation className="w-4 h-4" /> Live Map
+                        </Link>
                         <Link href="/admin/customers" className="btn-secondary !bg-purple-500/10 !text-purple-500 !border-purple-500/20 flex items-center justify-center gap-2 !py-2.5 flex-1 min-w-[140px] md:flex-none">
                             <Users className="w-4 h-4" /> Customers
                         </Link>
@@ -191,12 +192,25 @@ export default function AdminDashboard() {
                     ))}
                 </div>
 
+                {/* Live Tracking Map Section */}
+                <div className="mb-12 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold">Live Fleet Tracking</h2>
+                        <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-green-500">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            Live Updates Active
+                        </span>
+                    </div>
+                    <div className="glass-card p-4 border-white/5">
+                        <TrackingMap activeBookings={bookings.filter(b => b.status === "Active")} />
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Recent Requests Table */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold">Recent Rental Requests</h2>
-                            <button className="text-xs text-[var(--primary)] font-bold uppercase tracking-widest hover:underline">View All</button>
                         </div>
 
                         <div className="glass-card overflow-hidden border-white/5">
@@ -214,12 +228,12 @@ export default function AdminDashboard() {
                                     <tbody className="divide-y divide-white/5">
                                         {bookings.map((booking) => (
                                             <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
-                                                <td className="p-4 text-sm font-medium">{booking.id}</td>
+                                                <td className="p-4 text-sm font-medium">{booking.id.slice(0, 8)}</td>
                                                 <td className="p-4">
-                                                    <p className="text-sm font-bold">{booking.rider}</p>
-                                                    <p className="text-[10px] text-white/40">{booking.date}</p>
+                                                    <p className="text-sm font-bold">{booking.riderName}</p>
+                                                    <p className="text-[10px] text-white/40">{new Date(booking.createdAt).toLocaleDateString()}</p>
                                                 </td>
-                                                <td className="p-4 text-sm text-white/80">{booking.bike}</td>
+                                                <td className="p-4 text-sm text-white/80">{booking.scooter?.name}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${booking.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
                                                         booking.status === 'Active' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
@@ -231,34 +245,11 @@ export default function AdminDashboard() {
                                                 <td className="p-4 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <button
-                                                            onClick={() => {
-                                                                if ((booking as any).details) {
-                                                                    setSelectedCustomer({
-                                                                        name: (booking as any).rider,
-                                                                        passportNumber: (booking as any).details.passport,
-                                                                        idFront: (booking as any).details.idFront,
-                                                                        idBack: (booking as any).details.idBack
-                                                                    });
-                                                                } else {
-                                                                    setSelectedCustomer({
-                                                                        name: booking.rider,
-                                                                        passportNumber: "N" + Math.floor(1000000 + Math.random() * 9000000),
-                                                                        idFront: "/images/id-front-template.png",
-                                                                        idBack: "/images/id-back-template.png"
-                                                                    });
-                                                                }
-                                                            }}
+                                                            onClick={() => setSelectedCustomer(booking)}
                                                             className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
                                                             title="View Identity"
                                                         >
                                                             <Eye className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => (booking as any).details ? handleDownload(booking) : alert("No document data available for this legacy booking.")}
-                                                            className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
-                                                            title="Download Agreement"
-                                                        >
-                                                            <Download className="w-4 h-4" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleAction(booking.id, 'Active')}
@@ -268,23 +259,16 @@ export default function AdminDashboard() {
                                                             <CheckCircle2 className="w-4 h-4" />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleAction(booking.id, 'Delete')}
-                                                            className="p-2 hover:bg-white/10 rounded-lg text-red-500 transition-colors"
-                                                            title="Reject / Delete"
+                                                            onClick={() => handleAction(booking.id, 'Completed')}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-green-500 transition-colors"
+                                                            title="Mark Completed"
                                                         >
-                                                            <XCircle className="w-4 h-4" />
+                                                            <CheckCircle2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 </td>
                                             </tr>
                                         ))}
-                                        {bookings.length === 0 && (
-                                            <tr>
-                                                <td colSpan={5} className="p-12 text-center text-white/20 text-sm font-bold uppercase tracking-widest">
-                                                    No pending requests
-                                                </td>
-                                            </tr>
-                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -312,60 +296,26 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
                             ))}
-
-                            <div className="mt-8 pt-6 border-t border-white/5">
-                                <button className="w-full btn-secondary text-sm flex items-center justify-center gap-2">
-                                    <FileText className="w-4 h-4" /> Download Fleet Report
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Sri Lankan Police Quick Link */}
-                        <div className="glass-card p-6 bg-[var(--primary)]/5 border-[var(--primary)]/20">
-                            <h4 className="font-bold text-sm mb-2">Notice Updates</h4>
-                            <p className="text-[10px] text-white/60 mb-4 leading-relaxed">Ensure all riders are informed about the latest <strong>Sri Lankan Motor Traffic</strong> updates.</p>
-                            <Link href="/policy" className="text-xs font-bold text-[var(--primary)] uppercase tracking-widest hover:underline">Manage Policy Page</Link>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Identity Modal (Quick View) */}
+            {/* Identity Modal */}
             {selectedCustomer && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-[var(--background)]/90 backdrop-blur-md" onClick={() => setSelectedCustomer(null)}></div>
                     <div className="relative glass-card border-[var(--primary)]/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto no-scrollbar animate-in zoom-in-95 duration-300">
                         <div className="sticky top-0 bg-[#0a0c0f] p-6 border-b border-white/10 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-xl bg-[var(--primary)]/10">
-                                    <ShieldCheck className="w-5 h-5 text-[var(--primary)]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold">{selectedCustomer.name}</h3>
-                                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Passport: {selectedCustomer.passportNumber}</p>
-                                </div>
-                            </div>
+                            <h3 className="text-xl font-bold">{selectedCustomer.riderName}</h3>
                             <button onClick={() => setSelectedCustomer(null)} className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
-                        <div className="p-8 space-y-8">
+                        <div className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <h4 className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">Front Side of ID</h4>
-                                    <div className="aspect-[1.6/1] bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
-                                        <img src={selectedCustomer.idFront} alt="ID Front" className="w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h4 className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">Back Side of ID</h4>
-                                    <div className="aspect-[1.6/1] bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
-                                        <img src={selectedCustomer.idBack} alt="ID Back" className="w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex justify-end">
-                                <button onClick={() => setSelectedCustomer(null)} className="btn-primary !py-3 px-8 font-bold">Close View</button>
+                                <img src={selectedCustomer.documents?.idFront || "/images/id-front-template.png"} alt="ID Front" className="rounded-2xl border border-white/10" />
+                                <img src={selectedCustomer.documents?.idBack || "/images/id-back-template.png"} alt="ID Back" className="rounded-2xl border border-white/10" />
                             </div>
                         </div>
                     </div>
