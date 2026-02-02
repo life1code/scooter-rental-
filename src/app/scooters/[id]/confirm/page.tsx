@@ -4,7 +4,7 @@ import { Navbar } from "@/frontend/components/Navbar";
 import { compressImage, safeSaveToLocalStorage } from "@/backend/lib/image-utils";
 import { simulateEmailNotification } from "@/reportservice/email-service";
 import { SCOOTERS } from "@/backend/data/scooters";
-import { ChevronLeft, CheckCircle, FileText, User, CreditCard, ShieldCheck, Camera, Upload, Phone, Signature, Map as MapIcon, Info } from "lucide-react";
+import { ChevronLeft, CheckCircle, FileText, User, CreditCard, ShieldCheck, Camera, Upload, Phone, Map as MapIcon, Info, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -26,6 +26,9 @@ export default function BookingConfirm() {
     const [numberOfDays, setNumberOfDays] = useState<number>(0);
     const [totalPrice, setTotalPrice] = useState<number>(0);
     const [discount, setDiscount] = useState<number>(0);
+    const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+    const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+    const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!id) return;
@@ -78,9 +81,51 @@ export default function BookingConfirm() {
 
                 setDiscount(discountPercent);
                 setTotalPrice(total);
+            } else {
+                setNumberOfDays(0);
+                setTotalPrice(0);
+                setDiscount(0);
             }
         }
     }, [startDate, endDate, scooter]);
+
+    // Check availability when dates change
+    useEffect(() => {
+        if (startDate && endDate && id) {
+            const checkAvailability = async () => {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                if (end <= start) {
+                    setIsAvailable(null);
+                    return;
+                }
+
+                setIsCheckingAvailability(true);
+                setAvailabilityError(null);
+                try {
+                    const res = await fetch(`/api/scooters/${id}/availability?startDate=${startDate}&endDate=${endDate}`);
+                    const data = await res.json();
+                    if (res.ok) {
+                        setIsAvailable(data.available);
+                        if (!data.available) {
+                            setAvailabilityError("This scooter is already booked for the selected dates.");
+                        }
+                    } else {
+                        setAvailabilityError(data.error || "Failed to check availability");
+                        setIsAvailable(null);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    setAvailabilityError("Connection error. Could not check availability.");
+                    setIsAvailable(null);
+                } finally {
+                    setIsCheckingAvailability(false);
+                }
+            };
+            const timer = setTimeout(checkAvailability, 500); // Debounce to allow user to finish selecting
+            return () => clearTimeout(timer);
+        }
+    }, [startDate, endDate, id]);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -171,6 +216,11 @@ export default function BookingConfirm() {
 
         if (numberOfDays <= 0) {
             alert("Return date must be after pickup date.");
+            return;
+        }
+
+        if (isAvailable === false) {
+            alert("The scooter is not available for the selected dates. Please choose different dates.");
             return;
         }
 
@@ -393,6 +443,28 @@ export default function BookingConfirm() {
                                         </div>
                                     </div>
 
+                                    {/* Availability Check */}
+                                    {startDate && endDate && (
+                                        <div className="mt-2 text-left">
+                                            {isCheckingAvailability ? (
+                                                <p className="text-xs text-white/40 flex items-center gap-2 animate-pulse">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    Checking availability...
+                                                </p>
+                                            ) : isAvailable === true ? (
+                                                <p className="text-xs text-green-500 flex items-center gap-2">
+                                                    <CheckCircle2 className="w-3 h-3" />
+                                                    Scooter is available for these dates
+                                                </p>
+                                            ) : isAvailable === false ? (
+                                                <p className="text-xs text-red-400 flex items-center gap-2">
+                                                    <AlertCircle className="w-3 h-3" />
+                                                    {availabilityError}
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    )}
+
                                     {/* Price Summary */}
                                     {numberOfDays > 0 && (
                                         <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-xl p-4 space-y-2">
@@ -507,8 +579,12 @@ export default function BookingConfirm() {
                                     </label>
                                 </div>
 
-                                <button type="submit" className="w-full btn-primary !py-4 shadow-[0_0_30px_rgba(45,212,191,0.2)]">
-                                    Confirm & Request Approval
+                                <button
+                                    type="submit"
+                                    disabled={isCheckingAvailability || isAvailable === false}
+                                    className="w-full btn-primary !py-4 shadow-[0_0_30px_rgba(45,212,191,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isCheckingAvailability ? "Checking..." : isAvailable === false ? "Dates Unavailable" : "Confirm & Request Approval"}
                                 </button>
                             </form>
                         </div>

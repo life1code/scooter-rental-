@@ -222,11 +222,21 @@ function MyBookingsContent() {
                             <span>Back to Home</span>
                         </Link>
                         <h1 className="text-4xl font-bold tracking-tight">My <span className="text-[var(--primary)]">Booking</span></h1>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             <span className="px-2 py-0.5 rounded text-[10px] bg-[var(--primary)]/10 text-[var(--primary)] font-bold uppercase ring-1 ring-[var(--primary)]/20">
                                 {booking.status}
                             </span>
-                            <p className="text-white/40 text-sm italic">Booking ID: {booking.id}</p>
+                            <div className="text-white/40 text-sm italic flex flex-wrap items-center gap-2">
+                                <span>ID: {booking.id}</span>
+                                {booking.startDate && booking.endDate && (
+                                    <>
+                                        <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block"></span>
+                                        <span className="text-[var(--primary)]/60 font-medium">
+                                            {new Date(booking.startDate).toLocaleDateString()} — {new Date(booking.endDate).toLocaleDateString()}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -309,18 +319,30 @@ function MyBookingsContent() {
                                         <p className="text-lg font-bold text-[var(--primary)]">${booking.scooter?.pricePerDay}<span className="text-[10px] text-white/40 ml-1">/ day</span></p>
                                     </div>
                                 </div>
-                                <div className="pt-4 border-t border-white/5 flex justify-between">
-                                    <div className="text-center px-4">
-                                        <p className="text-[10px] text-white/40 font-bold uppercase">Pickup</p>
-                                        <p className="text-xs font-bold">{booking.scooter?.location}</p>
+                                <div className="pt-4 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="text-center md:text-left md:px-2">
+                                        <p className="text-[10px] text-white/40 font-bold uppercase mb-1">Pickup Date</p>
+                                        <p className="text-xs font-bold">{booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A'}</p>
                                     </div>
-                                    <div className="text-center px-4 border-x border-white/5">
-                                        <p className="text-[10px] text-white/40 font-bold uppercase">Rate</p>
-                                        <p className="text-xs font-bold">${booking.scooter?.pricePerDay}/day</p>
+                                    <div className="text-center md:text-left md:px-2 md:border-l border-white/5">
+                                        <p className="text-[10px] text-white/40 font-bold uppercase mb-1">Return Date</p>
+                                        <p className="text-xs font-bold">{booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A'}</p>
                                     </div>
-                                    <div className="text-center px-4">
-                                        <p className="text-[10px] text-white/40 font-bold uppercase">Insurance</p>
-                                        <p className="text-xs font-bold text-green-500">Active</p>
+                                    <div className="text-center md:text-left md:px-2 md:border-l border-white/5">
+                                        <p className="text-[10px] text-white/40 font-bold uppercase mb-1">Duration</p>
+                                        <p className="text-xs font-bold">
+                                            {(() => {
+                                                if (!booking.startDate || !booking.endDate) return '1 day';
+                                                const start = new Date(booking.startDate);
+                                                const end = new Date(booking.endDate);
+                                                const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                                                return days > 0 ? `${days} ${days === 1 ? 'day' : 'days'}` : '1 day';
+                                            })()}
+                                        </p>
+                                    </div>
+                                    <div className="text-center md:text-left md:px-2 md:border-l border-white/5">
+                                        <p className="text-[10px] text-white/40 font-bold uppercase mb-1">Total Price</p>
+                                        <p className="text-[13px] font-bold text-[var(--primary)]">${booking.totalAmount || (booking.scooter?.pricePerDay)}</p>
                                     </div>
                                 </div>
                             </div>
