@@ -76,7 +76,8 @@ export default function AdminDashboard() {
                             phone: b.riderPhone,
                             idFront: b.documents?.idFront || "/images/id-front-template.png",
                             idBack: b.documents?.idBack || "/images/id-back-template.png",
-                            passportImg: b.documents?.passport || null
+                            passportImg: b.documents?.passport || null,
+                            signature: b.documents?.signature || null
                         }
                     }));
 

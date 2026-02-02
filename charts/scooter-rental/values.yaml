@@ -75,4 +75,7 @@ nodeSelector: {}
 
 tolerations: []
 
+nextauth:
+  secret: "change-me-to-something-long-and-random"
+
 affinity: {}

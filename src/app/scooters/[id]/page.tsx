@@ -28,10 +28,17 @@ export default function ScooterDetail() {
                     const data = await res.json();
                     setScooter(data);
                 } else {
-                    // Fallback to check local storage for custom ones NOT in DB?
-                    // Or just use the static array as a last resort fallback if ID matches
-                    const staticMatch = SCOOTERS.find(s => s.id === id);
-                    if (staticMatch) setScooter(staticMatch);
+                    // Fallback to check local storage for custom ones NOT in DB (e.g. FLEET-XXXX)
+                    const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
+                    const customMatch = customScooters.find((s: any) => s.id === id);
+
+                    if (customMatch) {
+                        setScooter(customMatch);
+                    } else {
+                        // Last resort fallback to static array
+                        const staticMatch = SCOOTERS.find(s => s.id === id);
+                        if (staticMatch) setScooter(staticMatch);
+                    }
                 }
             } catch (e) {
                 console.error(e);

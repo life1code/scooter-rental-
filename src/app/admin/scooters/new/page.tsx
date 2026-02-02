@@ -46,48 +46,59 @@ export default function AddScooter() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Get form data
-        const formData = new FormData(e.target as HTMLFormElement);
-        const name = formData.get('name') as string;
-        const price = formData.get('price') as string;
+        try {
+            // Get form data
+            const formData = new FormData(e.target as HTMLFormElement);
+            const name = formData.get('name') as string;
+            const price = formData.get('price') as string;
 
-        // Save to localStorage
-        const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
-        const updatedFleet = [...customScooters, {
-            id: `FLEET-${Math.floor(1000 + Math.random() * 9000)}`,
-            name: name,
-            pricePerDay: parseFloat(price),
-            image: imagePreview || (formData.get('imageUrl') as string) || "/images/scooter-1.png",
-            rating: parseFloat(formData.get('rating') as string) || 5.0,
-            status: 'Available',
-            description: "Premium scooter added by host.",
-            specs: {
-                engine: formData.get('engine') || "125cc",
-                transmission: formData.get('transmission') || "Automatic",
-                speed: formData.get('speed') || "100 km/h",
-                fuel: formData.get('fuel') || "Petrol"
-            },
-            isSpotlight: formData.get('isSpotlight') === 'on',
-            manufacturerUrl: formData.get('manufacturerUrl') as string || "",
-            location: formData.get('location') as string || "Unawatuna",
-            ownerName: formData.get('ownerName') as string || "Ride Owner",
-            ownerWhatsapp: formData.get('ownerWhatsapp') as string || "+94700000000"
-        }];
+            const scooterData = {
+                name: name,
+                type: formData.get('type') || 'Scooter',
+                pricePerDay: parseFloat(price),
+                image: imagePreview || (formData.get('imageUrl') as string) || "/images/scooter-1.png",
+                rating: parseFloat(formData.get('rating') as string) || 5.0,
+                status: 'Available',
+                description: "Premium scooter added by host.",
+                specs: {
+                    engine: formData.get('engine') || "125cc",
+                    transmission: formData.get('transmission') || "Automatic",
+                    speed: formData.get('speed') || "100 km/h",
+                    fuel: formData.get('fuel') || "Petrol"
+                },
+                isSpotlight: formData.get('isSpotlight') === 'on',
+                manufacturerUrl: formData.get('manufacturerUrl') as string || "",
+                location: formData.get('location') as string || "Unawatuna",
+                ownerName: formData.get('ownerName') as string || "Ride Owner",
+                ownerWhatsapp: formData.get('ownerWhatsapp') as string || "+94700000000"
+            };
 
-        safeSaveToLocalStorage("custom_scooters", updatedFleet);
+            const response = await fetch('/api/scooters', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scooterData),
+            });
 
-        // Simulate API call
-        setTimeout(() => {
+            if (!response.ok) {
+                throw new Error('Failed to save scooter');
+            }
+
             setIsLoading(false);
             setIsSuccess(true);
             setTimeout(() => {
                 router.push("/admin/fleet");
             }, 1500);
-        }, 1000);
+        } catch (error) {
+            console.error("Error saving scooter:", error);
+            alert("Failed to save scooter to database. Please try again.");
+            setIsLoading(false);
+        }
     };
 
     return (

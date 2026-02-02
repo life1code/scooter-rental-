@@ -30,28 +30,37 @@ export default function FleetManagement() {
             router.push("/admin/login");
         }
 
-        // Load custom scooters and merge with static ones (preferring custom overrides)
-        const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
+        async function fetchFleet() {
+            try {
+                const res = await fetch('/api/scooters');
+                if (res.ok) {
+                    const data = await res.json();
+                    setAllScooters(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch fleet:", error);
+            }
+        }
 
-        const merged = SCOOTERS.map(staticS => {
-            const override = customScooters.find((c: any) => c.id === staticS.id);
-            return override || staticS;
-        });
-
-        // Add new custom scooters that aren't overrides
-        const additional = customScooters.filter((c: any) => !SCOOTERS.some(s => s.id === c.id));
-
-        setAllScooters([...merged, ...additional]);
+        fetchFleet();
     }, [router]);
 
-    const handleDelete = (id: string, name: string) => {
+    const handleDelete = async (id: string, name: string) => {
         if (window.confirm(`Are you sure you want to remove ${name} from your fleet?`)) {
-            const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
-            const updatedCustom = customScooters.filter((s: any) => s.id !== id);
-            localStorage.setItem("custom_scooters", JSON.stringify(updatedCustom));
+            try {
+                const res = await fetch(`/api/scooters/${id}`, {
+                    method: 'DELETE'
+                });
 
-            // Update local state (only for custom ones, since we can't delete from static data easily without more complex state)
-            setAllScooters(allScooters.filter(s => s.id !== id));
+                if (res.ok) {
+                    setAllScooters(prev => prev.filter(s => s.id !== id));
+                } else {
+                    alert("Failed to delete scooter from database.");
+                }
+            } catch (error) {
+                console.error("Error deleting scooter:", error);
+                alert("Failed to delete scooter.");
+            }
         }
     };
 

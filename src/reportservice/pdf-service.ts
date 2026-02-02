@@ -75,15 +75,25 @@ export const generateRentalAgreement = (booking: any) => {
     }
     y += photoHeight + 10;
 
-    // Add Signature (Moved after IDs)
+    // Add Signature
     if (booking.details?.signature) {
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.text("DIGITAL SIGNATURE", 15, y);
         y += 2;
-        doc.setFillColor(255, 255, 255);
-        doc.rect(15, y, 60, 20, 'F');
-        doc.addImage(booking.details.signature, 'JPEG', 15, y, 60, 20);
+
+        // Render signature image - auto-detect format or use PNG if base64 contains it
+        const sigData = booking.details.signature;
+        const format = sigData.includes('png') ? 'PNG' : 'JPEG';
+
+        try {
+            doc.addImage(sigData, format, 15, y, 60, 20);
+        } catch (e) {
+            console.error("PDF Signature Error:", e);
+            doc.rect(15, y, 60, 20);
+            doc.setFontSize(7);
+            doc.text("[Signature Rendering Failed]", 20, y + 10);
+        }
         y += 25;
     }
 

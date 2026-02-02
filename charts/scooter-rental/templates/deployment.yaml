@@ -53,14 +53,12 @@ spec:
                   name: scooter-secrets
                   key: database-url
                   optional: true
-          # livenessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
-          # readinessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+            - name: NEXTAUTH_SECRET
+              value: {{ .Values.nextauth.secret | default "super-secret-placeholder" | quote }}
+            - name: NEXTAUTH_URL
+              value: https://{{ (index .Values.ingress.hosts 0).host }}
+            - name: NEXT_PUBLIC_BASE_URL
+              value: https://{{ (index .Values.ingress.hosts 0).host }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
