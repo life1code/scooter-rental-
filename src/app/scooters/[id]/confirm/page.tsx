@@ -30,6 +30,12 @@ export default function BookingConfirm() {
     useEffect(() => {
         if (!id) return;
 
+        // Initialize dates from URL parameters
+        const urlStartDate = searchParams.get('startDate');
+        const urlEndDate = searchParams.get('endDate');
+        if (urlStartDate) setStartDate(urlStartDate);
+        if (urlEndDate) setEndDate(urlEndDate);
+
         async function fetchScooter() {
             try {
                 const res = await fetch(`/api/scooters/${id}`);
