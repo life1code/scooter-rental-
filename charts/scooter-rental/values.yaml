@@ -43,19 +43,19 @@ ingress:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
   hosts:
-    - host: rydex.ceilao.com
+    - host: ceylonrider.com
       paths:
         - path: /
           pathType: Prefix
-    - host: adminer.rydex.ceilao.com
+    - host: adminer.ceylonrider.com
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: scooter-rental-tls
       hosts:
-        - rydex.ceilao.com
-        - adminer.rydex.ceilao.com
+        - ceylonrider.com
+        - adminer.ceylonrider.com
 
 resources: 
   limits:
