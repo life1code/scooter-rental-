@@ -271,7 +271,11 @@ export default function AdminDashboard() {
                                                                 const start = new Date(booking.startDate);
                                                                 const end = new Date(booking.endDate);
                                                                 const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                                                                const pricePerDay = booking.scooter?.pricePerDay || 0;
+
+                                                                // Calculate discount
+                                                                let discount = 0;
+                                                                if (days >= 30) discount = 12;
+                                                                else if (days >= 7) discount = 5;
 
                                                                 generateRentalAgreement({
                                                                     id: booking.id,
@@ -280,8 +284,7 @@ export default function AdminDashboard() {
                                                                     date: new Date(booking.createdAt).toLocaleDateString(),
                                                                     rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
                                                                     amount: `$${booking.totalAmount}`,
-                                                                    numberOfDays: days,
-                                                                    pricePerDay: pricePerDay,
+                                                                    discount: discount,
                                                                     details: {
                                                                         passport: booking.riderPassport,
                                                                         phone: booking.riderPhone,
@@ -356,7 +359,11 @@ export default function AdminDashboard() {
                                     const start = new Date(selectedCustomer.startDate);
                                     const end = new Date(selectedCustomer.endDate);
                                     const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                                    const pricePerDay = selectedCustomer.scooter?.pricePerDay || 0;
+
+                                    // Calculate discount
+                                    let discount = 0;
+                                    if (days >= 30) discount = 12;
+                                    else if (days >= 7) discount = 5;
 
                                     generateRentalAgreement({
                                         id: selectedCustomer.id,
@@ -365,8 +372,7 @@ export default function AdminDashboard() {
                                         date: new Date(selectedCustomer.createdAt).toLocaleDateString(),
                                         rentalPeriod: `${new Date(selectedCustomer.startDate).toLocaleDateString()} - ${new Date(selectedCustomer.endDate).toLocaleDateString()}`,
                                         amount: `$${selectedCustomer.totalAmount}`,
-                                        numberOfDays: days,
-                                        pricePerDay: pricePerDay,
+                                        discount: discount,
                                         details: {
                                             passport: selectedCustomer.riderPassport,
                                             phone: selectedCustomer.riderPhone,
