@@ -18,9 +18,9 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "scooter-rental.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- if .Values.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
   {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
@@ -37,25 +37,24 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    {{- $host := .host -}}
-    - host: {{ $host | quote }}
+    {{- range $hostItem := .Values.ingress.hosts }}
+    - host: {{ $hostItem.host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-            pathType: {{ .pathType }}
+          {{- range $pathItem := $hostItem.paths }}
+          - path: {{ $pathItem.path }}
+            {{- if and $pathItem.pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
+            pathType: {{ $pathItem.pathType }}
             {{- end }}
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ if contains "adminer" $host }}adminer{{ else }}{{ $fullName }}{{ end }}
+                name: {{ if contains "adminer" $hostItem.host }}adminer{{ else }}{{ $fullName }}{{ end }}
                 port:
-                  number: {{ if contains "adminer" $host }}8080{{ else }}{{ $svcPort }}{{ end }}
+                  number: {{ if contains "adminer" $hostItem.host }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- else }}
-              serviceName: {{ if contains "adminer" $host }}adminer{{ else }}{{ $fullName }}{{ end }}
-              servicePort: {{ if contains "adminer" $host }}8080{{ else }}{{ $svcPort }}{{ end }}
+              serviceName: {{ if contains "adminer" $hostItem.host }}adminer{{ else }}{{ $fullName }}{{ end }}
+              servicePort: {{ if contains "adminer" $hostItem.host }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- end }}
           {{- end }}
     {{- end }}
