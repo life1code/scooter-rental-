@@ -20,7 +20,7 @@ export default function AdminLogin() {
             // Set a local flag to identify as admin
             localStorage.setItem("is_host_admin", "true");
             document.cookie = "is_host_admin=true; path=/";
-            router.push("/admin/dashboard");
+            router.push("/admin");
         } else {
             setError("Incorrect administrator password.");
             setIsLoading(false);
