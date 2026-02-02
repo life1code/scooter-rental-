@@ -61,6 +61,11 @@ pipeline {
                     // Or simply passing the full repo and tag split
                     
                     sh """
+                        # Cleanup conflicting resources to fix immutable field error
+                        kubectl delete deployment ${APP_NAME} --ignore-not-found=true
+                        kubectl delete pvc s3-pvc --ignore-not-found=true
+                        kubectl delete pv s3-pv --ignore-not-found=true
+                        
                         helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
                         --namespace ${K8S_NAMESPACE} \
                         --set image.repository=${REGISTRY}/scooter-rental-${env.BUILD_NUMBER} \
