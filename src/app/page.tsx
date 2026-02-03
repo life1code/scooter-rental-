@@ -93,7 +93,7 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative h-[70vh] md:h-[60vh] flex flex-col items-center justify-center px-4 pt-16">
+      <section className="relative min-h-[85vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-16 pb-32 md:pb-0">
         <div className="absolute inset-0 z-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--background)]"></div>
           <img
@@ -113,7 +113,7 @@ export default function Home() {
         </div>
 
         {/* Search Bar - Booking.com Style */}
-        <div className="absolute -bottom-24 md:-bottom-12 left-4 right-4 max-w-[1400px] mx-auto z-50">
+        <div className="absolute -bottom-32 md:-bottom-12 left-4 right-4 max-w-[1400px] mx-auto z-50">
           <div className="glass-card p-2 md:p-3 shadow-2xl border-[var(--primary)]/20 bg-[var(--background)]/90 backdrop-blur-xl relative">
             <div className="flex flex-col xl:flex-row items-stretch gap-2">
 
@@ -261,7 +261,7 @@ export default function Home() {
       </section>
 
       {/* Main Content */}
-      <section ref={resultsRef} className="max-w-7xl mx-auto px-4 mt-32 md:mt-24 space-y-12">
+      <section ref={resultsRef} className="max-w-7xl mx-auto px-4 mt-48 md:mt-24 space-y-12">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold">Available <span className="text-[var(--primary)]">rides</span></h2>
