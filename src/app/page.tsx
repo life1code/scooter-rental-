@@ -306,9 +306,6 @@ export default function Home() {
             <h2 className="text-3xl font-bold">Available <span className="text-[var(--primary)]">rides</span></h2>
             <p className="text-white/40 text-sm mt-1">Showing {filteredScooters.length} scooters near {location}</p>
           </div>
-          <button className="p-2 border border-white/10 rounded-xl hover:bg-white/5 transition-colors">
-            <SlidersHorizontal className="w-5 h-5" />
-          </button>
         </div>
 
         {filteredScooters.length > 0 ? (
