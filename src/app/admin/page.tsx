@@ -107,12 +107,17 @@ export default function AdminDashboard() {
         // Only allow access if authenticated with Google OAuth and email is in admin list
         if (status === "loading") return;
 
-        const isGoogleAdmin = status === "authenticated" &&
-            session?.user?.email &&
-            ADMIN_EMAILS.includes(session.user.email);
+        // Check if user is authenticated
+        if (status === "unauthenticated") {
+            router.push("/admin/login");
+            return;
+        }
+
+        const isGoogleAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
         if (!isGoogleAdmin) {
-            router.push("/admin/login");
+            // User is logged in but not an admin - redirect to home to prevent loop
+            router.push("/");
         }
     }, [status, session, router]);
 

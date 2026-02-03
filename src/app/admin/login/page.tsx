@@ -1,12 +1,53 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { Lock, ShieldCheck } from "lucide-react";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { Lock, ShieldCheck, LogOut, AlertTriangle } from "lucide-react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
+    const { data: session, status } = useSession();
+    const router = useRouter();
+
+    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+
+    useEffect(() => {
+        if (status === "authenticated" && session?.user?.email) {
+            if (ADMIN_EMAILS.includes(session.user.email)) {
+                router.push("/admin");
+            }
+        }
+    }, [status, session, router]);
+
     const handleGoogleSignIn = () => {
         signIn("google", { callbackUrl: "/admin" });
     };
+
+    // Show unauthorized view if logged in but not admin
+    if (status === "authenticated" && session?.user?.email && !ADMIN_EMAILS.includes(session.user.email)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--background)]">
+                <div className="w-full max-w-md glass-card p-10 text-center space-y-6">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto border border-red-500/20">
+                        <AlertTriangle className="w-8 h-8 text-red-500" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+                        <p className="text-white/40 text-sm">
+                            The account <strong>{session.user.email}</strong> is not authorized to access the admin dashboard.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="w-full btn-secondary flex items-center justify-center gap-2"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out & Return Home</span>
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--background)]">
