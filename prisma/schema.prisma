@@ -23,6 +23,7 @@ model User {
 model Scooter {
   id              String   @id @default(uuid())
   name            String
+  model           String   @default("Standard")
   type            String
   pricePerDay     Float
   rating          Float    @default(5.0)

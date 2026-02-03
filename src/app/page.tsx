@@ -19,6 +19,7 @@ export default function Home() {
   const [showEngine, setShowEngine] = useState(false);
   const [showLocations, setShowLocations] = useState(false);
   const [allScooters, setAllScooters] = useState<any[]>([]);
+  const [allBookings, setAllBookings] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -26,26 +27,46 @@ export default function Home() {
 
   // Load scooters from Database via API
   useEffect(() => {
-    async function fetchScooters() {
+    async function loadData() {
       try {
-        const res = await fetch('/api/scooters');
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        setAllScooters(data);
+        const [scootersRes, bookingsRes] = await Promise.all([
+          fetch('/api/scooters'),
+          fetch('/api/bookings')
+        ]);
+
+        if (scootersRes.ok) {
+          const scootersData = await scootersRes.json();
+          setAllScooters(scootersData);
+        }
+
+        if (bookingsRes.ok) {
+          const bookingsData = await bookingsRes.json();
+          setAllBookings(bookingsData);
+        }
       } catch (error) {
-        console.error("Failed to load scooters:", error);
-        // Fallback or show error
+        console.error("Failed to load data:", error);
       }
     }
-    fetchScooters();
+    loadData();
   }, []);
 
-  // Filter scooters based on selected model, engine power, and location
-  // We'll keep it reactive but add a visual "Search" trigger for better UX
+  // Extract unique models for the dropdown
+  const uniqueModels = useMemo(() => {
+    const models = new Set<string>();
+    allScooters.forEach(s => {
+      if (s.model) models.add(s.model);
+      else if (s.name) models.add(s.name.split(' ')[0]); // Fallback for old data
+    });
+    return ["All Models", ...Array.from(models).sort()];
+  }, [allScooters]);
+
+  // Filter scooters based on selected model, engine power, location, and real availability
   const filteredScooters = useMemo(() => {
     return allScooters.filter(scooter => {
-      const matchLocation = scooter.location?.toLowerCase().includes(location.toLowerCase());
-      const matchModel = selectedModel === "All Models" || scooter.name.toLowerCase().includes(selectedModel.toLowerCase());
+      const matchLocation = !location || scooter.location?.toLowerCase().includes(location.toLowerCase());
+
+      const scooterModel = (scooter.model || scooter.name || "").toLowerCase();
+      const matchModel = selectedModel === "All Models" || scooterModel.includes(selectedModel.toLowerCase());
 
       let matchEngine = true;
       if (selectedEngine !== "All Power") {
@@ -55,19 +76,29 @@ export default function Home() {
         else if (selectedEngine === "150cc+") matchEngine = engineVal >= 140;
       }
 
-      // Mock availability logic: if dates are selected, randomly "book" some scooters
-      // This makes the search feel "real" to the user
+      // Real availability logic
       let isAvailable = true;
       if (dateRange?.from && dateRange?.to) {
-        // Use the scooter ID to keep the "availability" consistent for the same search
-        const seed = parseInt(scooter.id) || 0;
-        const hash = (seed * 13) % 10;
-        isAvailable = hash > 2; // 80% availability mock
+        const searchStart = new Date(dateRange.from).getTime();
+        const searchEnd = new Date(dateRange.to).getTime();
+
+        // Check if any existing booking for this scooter overlaps with the search range
+        const hasOverlay = allBookings.some(booking => {
+          if (booking.scooterId !== scooter.id) return false;
+          if (booking.status === "Cancelled" || booking.status === "Completed") return false;
+
+          const bookingStart = new Date(booking.startDate).getTime();
+          const bookingEnd = new Date(booking.endDate).getTime();
+
+          return (bookingStart < searchEnd) && (bookingEnd > searchStart);
+        });
+
+        isAvailable = !hasOverlay;
       }
 
       return matchLocation && matchModel && matchEngine && isAvailable;
     });
-  }, [selectedModel, selectedEngine, location, dateRange, allScooters]);
+  }, [selectedModel, selectedEngine, location, dateRange, allScooters, allBookings]);
 
   const handleSearch = () => {
     setIsSearching(true);
@@ -192,7 +223,7 @@ export default function Home() {
 
                 {showModels && (
                   <div className="absolute top-[calc(100%+12px)] left-0 right-0 z-[100] bg-[#1e2124] rounded-2xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto no-scrollbar py-2 animate-in fade-in zoom-in-95">
-                    {["All Models", "Honda", "Yamaha", "TVS", "Suzuki", "Vespa", "BMW", "KTM", "NIU"].map((m) => (
+                    {uniqueModels.map((m) => (
                       <button
                         key={m}
                         className="w-full text-left px-5 py-3 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-between"
