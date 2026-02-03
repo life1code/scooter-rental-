@@ -51,8 +51,11 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json(newScooter, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating scooter:", error);
-        return NextResponse.json({ error: "Failed to create scooter" }, { status: 500 });
+        return NextResponse.json({
+            error: "Failed to create scooter",
+            details: error.message || "Unknown error"
+        }, { status: 500 });
     }
 }
