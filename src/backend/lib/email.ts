@@ -51,7 +51,6 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
                 <p>Great news! Your rental request for the <strong>${booking.bike}</strong> has been approved.</p>
                 <p>You can now proceed to the shop to pick up your scooter.</p>
                 <div style="background: #e6fffa; border: 1px solid #b2f5ea; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <p><strong>Location:</strong> Main Office, Mirissa</p>
                     <p><strong>WhatsApp Support:</strong> ${booking.ownerWhatsapp || '+94 70 000 0000'}</p>
                 </div>
                 <p>Enjoy your trip!</p>
