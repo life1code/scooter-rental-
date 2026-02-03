@@ -65,6 +65,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "scooter-rental.fullname" . }}-synced-secrets
                   key: RESEND_API_KEY
+                  optional: true
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
