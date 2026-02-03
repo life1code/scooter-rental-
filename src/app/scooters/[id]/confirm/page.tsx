@@ -10,6 +10,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useToast } from "@/frontend/components/ToastProvider";
 
 export default function BookingConfirm() {
     const { id } = useParams();
@@ -19,6 +21,19 @@ export default function BookingConfirm() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [signatureData, setSignatureData] = useState<string | null>(null);
+    const { data: session } = useSession();
+    const { showToast } = useToast();
+
+    // Auth-fill state
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+
+    useEffect(() => {
+        if (session?.user) {
+            if (session.user.name) setFullName(session.user.name);
+            if (session.user.email) setEmail(session.user.email);
+        }
+    }, [session]);
 
     // Date selection state
     const [startDate, setStartDate] = useState<string>("");
@@ -197,12 +212,12 @@ export default function BookingConfirm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!signatureData) {
-            alert("Please provide an online signature.");
+            showToast("Please provide an online signature.", "error");
             return;
         }
 
         if (!previews.licenseFront || !previews.licenseBack || !previews.passport) {
-            alert("Please upload all required documents: License Front, License Back, and Passport.");
+            showToast("Please upload all required documents: License Front, License Back, and Passport.", "error");
             return;
         }
 
@@ -210,25 +225,26 @@ export default function BookingConfirm() {
         const formData = new FormData(e.target as HTMLFormElement);
 
         if (!startDate || !endDate) {
-            alert("Please select pickup and return dates.");
+            showToast("Please select pickup and return dates.", "error");
             return;
         }
 
         if (numberOfDays <= 0) {
-            alert("Return date must be after pickup date.");
+            showToast("Return date must be after pickup date.", "error");
             return;
         }
 
         if (isAvailable === false) {
-            alert("The scooter is not available for the selected dates. Please choose different dates.");
+            showToast("The scooter is not available for the selected dates. Please choose different dates.", "error");
             return;
         }
 
         // Prepare booking data for database
         const bookingData = {
             scooterId: scooter?.id,
-            riderName: formData.get('fullName') as string,
-            riderEmail: formData.get('email') as string || null,
+            userId: (session?.user as any)?.id || null,
+            riderName: fullName,
+            riderEmail: email || null,
             riderPhone: formData.get('phone') as string,
             riderPassport: formData.get('passport') as string,
             startDate: new Date(startDate).toISOString(),
@@ -263,10 +279,22 @@ export default function BookingConfirm() {
             const savedBooking = await response.json();
             console.log('Booking saved successfully:', savedBooking);
 
+            // Generate PDF base64 for email attachment
+            const { generateAgreementBase64 } = await import("@/reportservice/pdf-service");
+            const agreementBase64 = generateAgreementBase64({
+                id: savedBooking.id,
+                rider: bookingData.riderName,
+                bike: scooter?.name || "Scooter",
+                amount: `$${totalPrice.toFixed(2)}`,
+                pricePerDay: scooter?.pricePerDay,
+                details: bookingData.documents
+            });
+
             // Simulate sending initial booking agreement
             simulateEmailNotification('booking', {
                 id: savedBooking.id,
                 rider: bookingData.riderName,
+                riderEmail: bookingData.riderEmail,
                 bike: scooter?.name || "Scooter",
                 scooterId: scooter?.id,
                 ownerName: scooter?.ownerName || "Ride Owner",
@@ -275,8 +303,9 @@ export default function BookingConfirm() {
                 location: scooter?.location || "Unawatuna",
                 date: format(new Date(), 'MMM dd, yyyy'),
                 status: "Pending",
-                amount: `$${scooter?.pricePerDay || 25}.00`,
+                amount: `$${totalPrice.toFixed(2)}`,
                 pricePerDay: scooter?.pricePerDay || 25,
+                agreementPdf: agreementBase64, // Pass the base64 to the email service
                 details: {
                     passport: bookingData.riderPassport,
                     phone: bookingData.riderPhone,
@@ -308,9 +337,10 @@ export default function BookingConfirm() {
             }
 
             setIsSubmitted(true);
+            showToast("Booking request sent successfully!", "success");
         } catch (error: any) {
             console.error('Booking error:', error);
-            alert(`Failed to create booking: ${error.message || "Unknown error"}`);
+            showToast(`Failed to create booking: ${error.message || "Unknown error"}`, "error");
         }
     };
 
@@ -395,7 +425,39 @@ export default function BookingConfirm() {
                                             <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">Full Name</label>
                                             <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 focus-within:border-[var(--primary)]/50 transition-colors">
                                                 <User className="w-4 h-4 text-white/30" />
-                                                <input required name="fullName" type="text" placeholder="John Doe" className="bg-transparent border-none focus:outline-none w-full text-sm" />
+                                                <input
+                                                    required
+                                                    name="fullName"
+                                                    type="text"
+                                                    placeholder="John Doe"
+                                                    value={fullName}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                    className="bg-transparent border-none focus:outline-none w-full text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">Email Address</label>
+                                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 focus-within:border-[var(--primary)]/50 transition-colors">
+                                                <FileText className="w-4 h-4 text-white/30" />
+                                                <input
+                                                    required
+                                                    name="email"
+                                                    type="email"
+                                                    placeholder="john@example.com"
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    className="bg-transparent border-none focus:outline-none w-full text-sm placeholder:text-white/10"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">WhatsApp Contact Number</label>
+                                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 focus-within:border-[var(--primary)]/50 transition-colors">
+                                                <Phone className="w-4 h-4 text-green-500" />
+                                                <input required name="phone" type="tel" placeholder="+94 77 123 4567" className="bg-transparent border-none focus:outline-none w-full text-sm" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -404,13 +466,6 @@ export default function BookingConfirm() {
                                                 <CreditCard className="w-4 h-4 text-white/30" />
                                                 <input required name="passport" type="text" placeholder="P00000000" className="bg-transparent border-none focus:outline-none w-full text-sm" />
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">WhatsApp Contact Number</label>
-                                        <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 focus-within:border-[var(--primary)]/50 transition-colors">
-                                            <Phone className="w-4 h-4 text-green-500" />
-                                            <input required name="phone" type="tel" placeholder="+94 77 123 4567" className="bg-transparent border-none focus:outline-none w-full text-sm" />
                                         </div>
                                     </div>
                                 </div>

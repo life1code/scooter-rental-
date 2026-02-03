@@ -136,6 +136,8 @@ export default function ScooterDetail() {
                                         mode="range"
                                         selected={selectedRange}
                                         onSelect={setSelectedRange}
+                                        fromDate={new Date()}
+                                        disabled={{ before: new Date() }}
                                         styles={{
                                             caption: { color: 'white' },
                                             head_cell: { color: 'rgba(255,255,255,0.4)' },

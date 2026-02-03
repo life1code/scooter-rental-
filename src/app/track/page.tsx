@@ -84,24 +84,20 @@ function MyBookingsContent() {
                     }
                 }
 
-                // Priority 2: Local Storage
+                // Priority 2: Fetch all user bookings from API
+                const apiRes = await fetch('/api/bookings');
+                if (apiRes.ok) {
+                    const bookingsData = await apiRes.json();
+                    if (bookingsData.length > 0) {
+                        setBooking(bookingsData[0]); // Show latest booking
+                        return;
+                    }
+                }
+
+                // Priority 3: Local Storage (Legacy Fallback)
                 const localBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
                 if (localBookings.length > 0) {
-                    const res = await fetch(`/api/bookings/${localBookings[0].id}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setBooking(data);
-                    } else {
-                        // Fallback to local data if API fails but we have some info
-                        setBooking({
-                            ...localBookings[0],
-                            scooter: {
-                                name: localBookings[0].bike,
-                                location: localBookings[0].location,
-                                image: localBookings[0].scooterImage
-                            }
-                        });
-                    }
+                    setBooking(localBookings[0]);
                 }
             } catch (error) {
                 console.error("Failed to fetch booking:", error);

@@ -211,7 +211,9 @@ export default function Home() {
                       mode="range"
                       selected={dateRange}
                       onSelect={setDateRange}
-                      numberOfMonths={2}
+                      numberOfMonths={1}
+                      fromDate={new Date()}
+                      disabled={{ before: new Date() }}
                       className="calendar-custom"
                     />
                   </div>

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/backend/lib/db";
 
 export const dynamic = 'force-dynamic';
@@ -16,20 +18,15 @@ function generateShortId() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+        const session = await getServerSession(authOptions);
+
         console.log("Received booking request for scooter:", body.scooterId);
 
-        // Log payload size roughly
-        const payloadSize = JSON.stringify(body).length;
-        console.log(`Payload size: ${Math.round(payloadSize / 1024)}KB`);
+        // Map userId from session if available
+        const userId = body.userId || (session?.user as any)?.id || null;
 
         // Validate required fields
         if (!body.scooterId || !body.riderName || !body.riderPhone || !body.riderPassport) {
-            console.error("Missing required fields:", {
-                scooterId: !!body.scooterId,
-                riderName: !!body.riderName,
-                riderPhone: !!body.riderPhone,
-                riderPassport: !!body.riderPassport
-            });
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -70,11 +67,7 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 {
                     error: "Scooter is not available for the selected dates",
-                    code: "BOOKING_CONFLICT",
-                    conflictingBookings: conflictingBookings.map(b => ({
-                        startDate: b.startDate,
-                        endDate: b.endDate
-                    }))
+                    code: "BOOKING_CONFLICT"
                 },
                 { status: 409 }
             );
@@ -88,7 +81,7 @@ export async function POST(request: Request) {
                     data: {
                         id: generateShortId(),
                         scooterId: body.scooterId,
-                        userId: body.userId || null,
+                        userId: userId,
                         riderName: body.riderName,
                         riderEmail: body.riderEmail,
                         riderPhone: body.riderPhone,
@@ -100,29 +93,22 @@ export async function POST(request: Request) {
                         status: "Pending"
                     }
                 });
-                break; // Success
+                break;
             } catch (e: any) {
                 if (e.code === 'P2002' && e.meta?.target?.includes('id')) {
                     retries--;
                     if (retries === 0) throw e;
-                    continue; // Retry with new ID
+                    continue;
                 }
-                throw e; // Other error
+                throw e;
             }
         }
 
-        if (!booking) throw new Error("Failed to create booking after retries");
-
-        console.log("Booking created successfully:", booking.id);
         return NextResponse.json(booking, { status: 201 });
     } catch (error: any) {
         console.error("Error creating booking:", error);
         return NextResponse.json(
-            {
-                error: "Failed to create booking",
-                code: error.code,
-                details: error.message || "Database connection error"
-            },
+            { error: "Failed to create booking", details: error.message },
             { status: 500 }
         );
     }
@@ -130,13 +116,20 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
-        // Fetch all bookings (Admin view mostly)
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = (session.user as any).id;
+        const isAdmin = session.user.email === 'smilylife996cha@gmail.com';
+
         const bookings = await prisma.booking.findMany({
-            include: {
-                scooter: true,
-            },
+            where: isAdmin ? {} : { userId: userId },
+            include: { scooter: true },
             orderBy: { createdAt: 'desc' },
-            take: 100 // Limit for safety
+            take: 100
         });
 
         return NextResponse.json(bookings);

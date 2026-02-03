@@ -14,9 +14,15 @@ export async function PATCH(
             return NextResponse.json({ error: "Missing status" }, { status: 400 });
         }
 
+        // If status is 'Active', also verify the customer
+        const dataToUpdate: any = { status };
+        if (status === 'Active') {
+            dataToUpdate.verificationStatus = 'Verified';
+        }
+
         const updatedBooking = await prisma.booking.update({
             where: { id },
-            data: { status },
+            data: dataToUpdate,
         });
 
         return NextResponse.json(updatedBooking);

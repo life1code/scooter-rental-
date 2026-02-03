@@ -20,14 +20,17 @@ import {
     ExternalLink,
     X,
     Download,
-    Navigation
+    Navigation,
+    AlertTriangle
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { generateRentalAgreement } from "@/reportservice/pdf-service";
 import { simulateEmailNotification } from "@/reportservice/email-service";
+import { useToast } from "@/frontend/components/ToastProvider";
 
 interface Booking {
     id: string;
@@ -90,10 +93,12 @@ const TrackingMap = ({ activeBookings }: { activeBookings: any[] }) => {
 
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
+    const { showToast } = useToast();
     const router = useRouter();
     const [bookings, setBookings] = useState<any[]>([]);
     const [stats, setStats] = useState<any[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+    const [confirmAction, setConfirmAction] = useState<{ id: string, status: string } | null>(null);
 
     useEffect(() => {
         const isLocalAdmin = localStorage.getItem("is_host_admin") === "true";
@@ -136,6 +141,14 @@ export default function AdminDashboard() {
     }, [bookings]);
 
     const handleAction = async (id: string, newStatus: string) => {
+        setConfirmAction({ id, status: newStatus });
+    };
+
+    const processAction = async () => {
+        if (!confirmAction) return;
+        const { id, status: newStatus } = confirmAction;
+        setConfirmAction(null);
+
         try {
             const res = await fetch(`/api/bookings/${id}/status`, {
                 method: 'PATCH',
@@ -144,7 +157,23 @@ export default function AdminDashboard() {
             });
 
             if (res.ok) {
+                showToast(`Booking status updated to ${newStatus}`, "success");
+                // Send approval email
+                if (newStatus === 'Active') {
+                    const booking = bookings.find(b => b.id === id);
+                    if (booking) {
+                        simulateEmailNotification('approval', {
+                            id: booking.id,
+                            rider: booking.riderName,
+                            riderEmail: booking.riderEmail,
+                            bike: booking.scooter?.name,
+                            ownerWhatsapp: booking.scooter?.ownerWhatsapp
+                        });
+                    }
+                }
                 fetchBookings();
+            } else {
+                showToast("Failed to update status", "error");
             }
         } catch (error) {
             console.error("Failed to update status:", error);
@@ -341,6 +370,49 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {confirmAction && (
+                    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-[#000]/60 backdrop-blur-sm"
+                            onClick={() => setConfirmAction(null)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative glass-card border-[var(--primary)]/20 p-8 w-full max-w-sm text-center shadow-2xl bg-[#1e2124]"
+                        >
+                            <div className="w-16 h-16 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <AlertTriangle className="w-8 h-8 text-[var(--primary)]" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">Confirm Action</h3>
+                            <p className="text-white/60 text-sm mb-8">
+                                Do you approve this booking for ID <span className="text-white font-mono">#{confirmAction.id.slice(0, 6)}</span>?
+                            </p>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setConfirmAction(null)}
+                                    className="flex-1 px-6 py-3 rounded-xl border border-white/10 text-white/60 font-bold hover:bg-white/5 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={processAction}
+                                    className="flex-1 px-6 py-3 rounded-xl bg-[var(--primary)] text-black font-bold hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] transition-all"
+                                >
+                                    Yes, Approve
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Identity Modal */}
             {selectedCustomer && (
