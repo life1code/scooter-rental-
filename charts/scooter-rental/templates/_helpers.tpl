@@ -49,3 +49,13 @@ Selector labels
 app.kubernetes.io/name: {{ include "scooter-rental.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "scooter-rental.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "scooter-rental.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
