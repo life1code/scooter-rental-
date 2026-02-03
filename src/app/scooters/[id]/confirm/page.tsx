@@ -477,12 +477,19 @@ export default function BookingConfirm() {
                                                 <span className="font-bold">${scooter?.pricePerDay}/day</span>
                                             </div>
                                             {discount > 0 && (
-                                                <div className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/20 rounded-lg animate-pulse">
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                                        <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Special Discount Applied ({discount}%)</span>
+                                                <div className="flex flex-col gap-4 p-4 bg-green-500/10 border-2 border-green-500/30 rounded-2xl animate-in zoom-in-95">
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                                                                <CheckCircle2 className="w-5 h-5 text-black" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-xs font-black text-green-500 uppercase tracking-[0.2em]">Loyalty Discount Applied</span>
+                                                                <p className="text-[10px] text-green-500/60 font-medium">You saved {(discount).toFixed(0)}% based on your rental duration</p>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-xl font-black text-green-400 neon-text">-${((numberOfDays * (scooter?.pricePerDay || 0)) * (discount / 100)).toFixed(2)}</span>
                                                     </div>
-                                                    <span className="font-bold text-green-500">-${((numberOfDays * (scooter?.pricePerDay || 0)) * (discount / 100)).toFixed(2)} Savings</span>
                                                 </div>
                                             )}
                                             <div className="flex justify-between items-center text-xl border-t border-white/10 pt-4 mt-2">

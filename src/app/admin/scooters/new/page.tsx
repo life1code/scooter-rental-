@@ -139,18 +139,7 @@ export default function AddScooter() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Scooter Model (for Dropdown Search)</label>
-                                    <input
-                                        type="text"
-                                        name="model"
-                                        placeholder="e.g. PCX, NMAX, TVS Ntorq"
-                                        required
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-                                    />
-                                    <p className="text-[9px] text-white/20 italic ml-1">This value will appear in the home page filter dropdown.</p>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Display Name</label>
+                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Scooter Display Name</label>
                                     <input
                                         type="text"
                                         name="name"
@@ -158,10 +147,11 @@ export default function AddScooter() {
                                         required
                                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
                                     />
+                                    <p className="text-[9px] text-white/20 italic ml-1">The title shown to customers on the card.</p>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Category / Type</label>
-                                    <select className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all appearance-none">
+                                    <select name="type" className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all appearance-none">
                                         <option value="Scooter">Scooter</option>
                                         <option value="Motorbike">Motorbike</option>
                                         <option value="Electric">Electric</option>
@@ -202,8 +192,20 @@ export default function AddScooter() {
                                         step="0.1"
                                         max="5"
                                         placeholder="4.9"
+                                        defaultValue="4.9"
                                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
                                     />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Scooter Model (Filter Keyword)</label>
+                                    <input
+                                        type="text"
+                                        name="model"
+                                        placeholder="e.g. PCX, NMAX, Dio"
+                                        required
+                                        className="w-full bg-[var(--primary)]/5 border border-[var(--primary)]/20 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all font-bold"
+                                    />
+                                    <p className="text-[9px] text-[var(--primary)] italic ml-1 font-bold">This MUST match the search dropdown perfectly.</p>
                                 </div>
                             </div>
                         </div>

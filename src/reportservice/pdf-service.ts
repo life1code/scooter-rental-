@@ -12,13 +12,14 @@ export const generateRentalAgreement = (booking: any) => {
 
     // Logo position: Left side
     try {
-        // We use the public path which will resolve in the browser
+        // We use the absolute path or public URL
+        // In jspdf, if running in browser, "/images/pdf-logo.png" works if hosted.
         doc.addImage("/images/pdf-logo.png", "PNG", 15, 7, 40, 30);
     } catch (e) {
-        console.error("Logo failed to load (this is expected in some dev environments):", e);
+        console.error("Logo failed to load:", e);
     }
 
-    // Title & Booking ID (Right aligned to balance the logo)
+    // Title & Booking ID (Right aligned as per image)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(26);
     doc.setFont("helvetica", "bold");
@@ -33,7 +34,7 @@ export const generateRentalAgreement = (booking: any) => {
     // Content Section
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
-    let y = 45;
+    let y = 52; // Push down slightly for cleaner separation
 
     const addCompactSection = (title: string, data: { [key: string]: string }) => {
         doc.setFont("helvetica", "bold");
@@ -46,7 +47,7 @@ export const generateRentalAgreement = (booking: any) => {
             doc.setFont("helvetica", "bold");
             doc.text(`${key}:`, 20, y);
             doc.setFont("helvetica", "normal");
-            doc.text(`${value}`, 60, y);
+            doc.text(`${value}`, 70, y); // Aligned values
             y += 6;
         });
         y += 2;
@@ -57,13 +58,13 @@ export const generateRentalAgreement = (booking: any) => {
         : booking.amount;
 
     addCompactSection("BOOKING & RIDER INFO", {
-        "Booking Date": booking.date,
+        "Booking Date": booking.date || new Date().toLocaleDateString(),
         "Booking Time": booking.bookingTime || new Date().toLocaleTimeString(),
         "Rental Period": booking.rentalPeriod || "N/A",
-        "Rider": booking.rider,
-        "Scooter": booking.bike,
-        "Price Per Day": booking.pricePerDay ? `$${booking.pricePerDay}.00` : "N/A",
-        "Total Amount": amountDisplay,
+        "Rider": booking.rider || "N/A",
+        "Scooter": booking.bike || "N/A",
+        "Price Per Day": booking.pricePerDay ? `$${booking.pricePerDay}.00` : "$25.00",
+        "Total Amount": amountDisplay || "N/A",
         "Passport/IC": booking.details?.passport || "N/A",
         "Phone": booking.details?.phone || "N/A"
     });

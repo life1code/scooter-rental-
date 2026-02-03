@@ -60,7 +60,7 @@ model Review {
 }
 
 model Booking {
-  id              String   @id @default(uuid())
+  id              String   @id
   // Relation to Scooter
   scooterId       String
   scooter         Scooter  @relation(fields: [scooterId], references: [id])
