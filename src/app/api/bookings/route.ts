@@ -135,22 +135,19 @@ export async function POST(request: Request) {
 
             const agreementPdf = generateAgreementBase64(pdfData);
 
-            // Send email with PDF attachment
-            await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/email/notify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: 'booking',
-                    booking: {
-                        id: booking?.id,
-                        rider: body.riderName,
-                        riderEmail: body.riderEmail,
-                        bike: scooter?.name || 'Scooter',
-                        amount: `$${body.totalAmount}`,
-                        startDate: new Date(body.startDate).toLocaleDateString(),
-                        agreementPdf: agreementPdf
-                    }
-                })
+            // Send email with PDF attachment directly via library
+            const { sendNotificationEmail } = await import('@/backend/lib/email');
+            await sendNotificationEmail({
+                type: 'booking',
+                booking: {
+                    id: booking?.id,
+                    rider: body.riderName,
+                    riderEmail: body.riderEmail,
+                    bike: scooter?.name || 'Scooter',
+                    amount: `$${body.totalAmount}`,
+                    startDate: new Date(body.startDate).toLocaleDateString(),
+                    agreementPdf: agreementPdf
+                }
             });
 
             console.log(`📧 Booking confirmation email sent to ${body.riderEmail}`);
