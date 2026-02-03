@@ -22,6 +22,44 @@ export async function GET(
     }
 }
 
+export async function PUT(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const body = await request.json();
+
+        const updatedScooter = await prisma.scooter.update({
+            where: { id: id },
+            data: {
+                name: body.name,
+                model: body.model,
+                type: body.type,
+                pricePerDay: body.pricePerDay,
+                image: body.image,
+                rating: body.rating,
+                description: body.description,
+                specs: body.specs,
+                isSpotlight: body.isSpotlight,
+                manufacturerUrl: body.manufacturerUrl,
+                location: body.location,
+                ownerName: body.ownerName,
+                ownerWhatsapp: body.ownerWhatsapp,
+                status: body.status || "Available"
+            }
+        });
+
+        return NextResponse.json(updatedScooter);
+    } catch (error: any) {
+        console.error("Error updating scooter:", error);
+        return NextResponse.json({
+            error: "Failed to update scooter",
+            details: error.message || "Unknown error"
+        }, { status: 500 });
+    }
+}
+
 export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }

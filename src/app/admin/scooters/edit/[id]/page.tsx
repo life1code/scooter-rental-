@@ -23,16 +23,21 @@ import { compressImage, safeSaveToLocalStorage } from "@/backend/lib/image-utils
 interface Scooter {
     id: string;
     name: string;
+    model?: string;
+    type: string;
     pricePerDay: number;
     image: string;
     rating: number;
-    status: string;
+    status?: string;
     description?: string;
     specs: {
-        engine: string;
-        transmission: string;
-        speed: string;
-        fuel: string;
+        engine?: string;
+        transmission?: string;
+        speed?: string;
+        fuel?: string;
+        range?: string;
+        battery?: string;
+        weight?: string;
     };
     isSpotlight?: boolean;
     manufacturerUrl?: string;
@@ -67,18 +72,41 @@ export default function EditScooter() {
     useEffect(() => {
         if (status !== "authenticated") return;
 
-        const staticScooter = SCOOTERS.find(s => s.id === scooterId);
-        const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
-        const customScooter = customScooters.find((s: Scooter) => s.id === scooterId);
+        async function loadScooter() {
+            // 1. Try static list
+            const staticScooter = SCOOTERS.find(s => s.id === scooterId);
+            if (staticScooter) {
+                setScooter(staticScooter);
+                setImagePreview(staticScooter.image);
+                return;
+            }
 
-        const foundScooter = customScooter || staticScooter;
+            // 2. Try localStorage
+            const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
+            const customScooter = customScooters.find((s: Scooter) => s.id === scooterId);
+            if (customScooter) {
+                setScooter(customScooter);
+                setImagePreview(customScooter.image);
+                return;
+            }
 
-        if (foundScooter) {
-            setScooter(foundScooter);
-            setImagePreview(foundScooter.image);
-        } else {
-            router.push("/admin/fleet");
+            // 3. Try API (Database)
+            try {
+                const res = await fetch(`/api/scooters/${scooterId}`);
+                if (res.ok) {
+                    const dbScooter = await res.json();
+                    setScooter(dbScooter);
+                    setImagePreview(dbScooter.image);
+                } else {
+                    router.push("/admin/fleet");
+                }
+            } catch (error) {
+                console.error("Failed to fetch scooter from DB:", error);
+                router.push("/admin/fleet");
+            }
         }
+
+        loadScooter();
     }, [status, scooterId, router]);
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -96,19 +124,22 @@ export default function EditScooter() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
         // Get form data
         const formData = new FormData(e.target as HTMLFormElement);
 
-        const updatedScooter = {
+        const updatedScooterData = {
             ...scooter,
             name: formData.get('name') as string,
+            model: (formData.get('model') as string) || scooter?.name || "Standard",
+            type: (formData.get('type') as string) || scooter?.type || "Scooter",
             pricePerDay: parseFloat(formData.get('price') as string),
-            image: imagePreview || formData.get('imageUrl') as string || scooter?.image || "/images/spotlight/honda-pcx.jpeg",
+            image: imagePreview || (formData.get('imageUrl') as string) || scooter?.image || "/images/spotlight/honda-pcx.jpeg",
             rating: parseFloat(formData.get('rating') as string) || scooter?.rating || 5.0,
+            description: scooter?.description || "Premium scooter updated by host.",
             specs: {
                 engine: formData.get('engine') as string,
                 transmission: formData.get('transmission') as string,
@@ -122,28 +153,46 @@ export default function EditScooter() {
             ownerWhatsapp: formData.get('ownerWhatsapp') as string || scooter?.ownerWhatsapp || "+94700000000"
         };
 
-        // Save to localStorage (as an override or update)
-        const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
-        const index = customScooters.findIndex((s: Scooter) => s.id === scooterId);
+        // Determine save method (API or LocalStorage)
+        // Static scooters (ids like '1', '2', etc.) will be handled as "new" overrides in localStorage for now
+        // Database scooters (UUIDs) will be handled via API
+        const isDbScooter = scooterId.length > 5; // UUIDs are long, static IDs are short
 
-        let updatedList;
-        if (index !== -1) {
-            updatedList = [...customScooters];
-            updatedList[index] = updatedScooter;
-        } else {
-            updatedList = [...customScooters, updatedScooter];
-        }
+        try {
+            if (isDbScooter) {
+                const res = await fetch(`/api/scooters/${scooterId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedScooterData)
+                });
 
-        safeSaveToLocalStorage("custom_scooters", updatedList);
+                if (!res.ok) throw new Error("Failed to update scooter in database");
+            } else {
+                // Save to localStorage
+                const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
+                const index = customScooters.findIndex((s: Scooter) => s.id === scooterId);
 
-        // Simulate API call
-        setTimeout(() => {
+                let updatedList;
+                if (index !== -1) {
+                    updatedList = [...customScooters];
+                    updatedList[index] = updatedScooterData;
+                } else {
+                    updatedList = [...customScooters, updatedScooterData];
+                }
+                safeSaveToLocalStorage("custom_scooters", updatedList);
+            }
+
             setIsLoading(false);
             setIsSuccess(true);
             setTimeout(() => {
                 router.push("/admin/fleet");
             }, 1500);
-        }, 1000);
+
+        } catch (error) {
+            console.error("Error updating scooter:", error);
+            alert("Failed to update scooter. Please try again.");
+            setIsLoading(false);
+        }
     };
 
     if (!scooter) return null;
