@@ -89,6 +89,6 @@ google:
   clientSecret: "DUMMY_CLIENT_SECRET"
 
 resend:
-  apiKey: "re_123456789"
+  # Managed by AWS synced secret
 
 awsRegion: "ap-southeast-2"

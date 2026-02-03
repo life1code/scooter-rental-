@@ -61,7 +61,10 @@ spec:
                   name: {{ include "scooter-rental.fullname" . }}-synced-secrets
                   key: GOOGLE_CLIENT_SECRET
             - name: RESEND_API_KEY
-              value: {{ .Values.resend.apiKey | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: RESEND_API_KEY
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
