@@ -65,8 +65,7 @@ export default function Home() {
     return allScooters.filter(scooter => {
       const matchLocation = !location || scooter.location?.toLowerCase().includes(location.toLowerCase());
 
-      const scooterModel = (scooter.model || scooter.name || "").toLowerCase();
-      const matchModel = selectedModel === "All Models" || scooterModel.includes(selectedModel.toLowerCase());
+      const matchModel = selectedModel === "All Models" || scooter.name.toLowerCase().includes(selectedModel.toLowerCase());
 
       let matchEngine = true;
       if (selectedEngine !== "All Power") {
