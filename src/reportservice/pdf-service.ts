@@ -43,9 +43,11 @@ export const generateRentalAgreement = (booking: any) => {
 
     addCompactSection("BOOKING & RIDER INFO", {
         "Booking Date": booking.date,
+        "Booking Time": booking.bookingTime || new Date().toLocaleTimeString(),
         "Rental Period": booking.rentalPeriod || "N/A",
         "Rider": booking.rider,
         "Scooter": booking.bike,
+        "Price Per Day": booking.pricePerDay ? `$${booking.pricePerDay}.00` : "N/A",
         "Total Amount": amountDisplay,
         "Passport/IC": booking.details?.passport || "N/A",
         "Phone": booking.details?.phone || "N/A"

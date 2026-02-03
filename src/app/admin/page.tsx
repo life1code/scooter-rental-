@@ -286,8 +286,10 @@ export default function AdminDashboard() {
                                                                     rider: booking.riderName,
                                                                     bike: booking.scooter?.name,
                                                                     date: new Date(booking.createdAt).toLocaleDateString(),
+                                                                    bookingTime: new Date(booking.createdAt).toLocaleTimeString(),
                                                                     rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
                                                                     amount: `$${booking.totalAmount}`,
+                                                                    pricePerDay: booking.scooter?.pricePerDay,
                                                                     discount: discount,
                                                                     details: {
                                                                         passport: booking.riderPassport,
@@ -374,8 +376,10 @@ export default function AdminDashboard() {
                                         rider: selectedCustomer.riderName,
                                         bike: selectedCustomer.scooter?.name,
                                         date: new Date(selectedCustomer.createdAt).toLocaleDateString(),
+                                        bookingTime: new Date(selectedCustomer.createdAt).toLocaleTimeString(),
                                         rentalPeriod: `${new Date(selectedCustomer.startDate).toLocaleDateString()} - ${new Date(selectedCustomer.endDate).toLocaleDateString()}`,
                                         amount: `$${selectedCustomer.totalAmount}`,
+                                        pricePerDay: selectedCustomer.scooter?.pricePerDay,
                                         discount: discount,
                                         details: {
                                             passport: selectedCustomer.riderPassport,

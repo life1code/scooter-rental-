@@ -109,8 +109,8 @@ export default function PolicyPage() {
                                 <p className="font-medium opacity-80 uppercase tracking-widest text-xs">24/7 Emergency Roadside Support</p>
                             </div>
                         </div>
-                        <a href="tel:+94771234567" className="bg-black text-white px-8 py-4 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-transform">
-                            Call +94 77 123 4567
+                        <a href="tel:+94767856020" className="bg-black text-white px-8 py-4 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-transform">
+                            Call +94 76 785 6020
                         </a>
                     </div>
                 </div>

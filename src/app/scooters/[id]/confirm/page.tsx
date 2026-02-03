@@ -467,24 +467,30 @@ export default function BookingConfirm() {
 
                                     {/* Price Summary */}
                                     {numberOfDays > 0 && (
-                                        <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-xl p-4 space-y-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-white/60">Rental Duration:</span>
-                                                <span className="font-bold">{numberOfDays} {numberOfDays === 1 ? 'day' : 'days'}</span>
+                                        <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-xl p-6 space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-white/40 italic">Rental Duration:</span>
+                                                <span className="font-bold px-3 py-1 bg-white/5 rounded-lg">{numberOfDays} {numberOfDays === 1 ? 'day' : 'days'}</span>
                                             </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-white/60">Rate:</span>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-white/40 italic">Rate:</span>
                                                 <span className="font-bold">${scooter?.pricePerDay}/day</span>
                                             </div>
                                             {discount > 0 && (
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-[var(--primary)]">Discount ({discount}%):</span>
-                                                    <span className="font-bold text-[var(--primary)]">-${((numberOfDays * (scooter?.pricePerDay || 0)) * (discount / 100)).toFixed(2)}</span>
+                                                <div className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/20 rounded-lg animate-pulse">
+                                                    <div className="flex items-center gap-2">
+                                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                                        <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Special Discount Applied ({discount}%)</span>
+                                                    </div>
+                                                    <span className="font-bold text-green-500">-${((numberOfDays * (scooter?.pricePerDay || 0)) * (discount / 100)).toFixed(2)} Savings</span>
                                                 </div>
                                             )}
-                                            <div className="flex justify-between text-lg border-t border-white/10 pt-2">
-                                                <span className="font-bold">Total:</span>
-                                                <span className="font-bold text-[var(--primary)]">${totalPrice.toFixed(2)}</span>
+                                            <div className="flex justify-between items-center text-xl border-t border-white/10 pt-4 mt-2">
+                                                <span className="font-black tracking-tight">Total Amount</span>
+                                                <div className="text-right">
+                                                    <span className="text-3xl font-black text-[var(--primary)] neon-text">${totalPrice.toFixed(2)}</span>
+                                                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">Inclusive of all taxes</p>
+                                                </div>
                                             </div>
                                         </div>
                                     )}

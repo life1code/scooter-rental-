@@ -3,6 +3,16 @@ import { prisma } from "@/backend/lib/db";
 
 export const dynamic = 'force-dynamic';
 
+// Helper to generate short 5-character alphanumeric ID
+function generateShortId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude ambiguous chars like 0, O, 1, I, l
+    let result = '';
+    for (let i = 0; i < 5; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -70,21 +80,38 @@ export async function POST(request: Request) {
             );
         }
 
-        const booking = await prisma.booking.create({
-            data: {
-                scooterId: body.scooterId,
-                userId: body.userId || null,
-                riderName: body.riderName,
-                riderEmail: body.riderEmail,
-                riderPhone: body.riderPhone,
-                riderPassport: body.riderPassport,
-                startDate: new Date(body.startDate),
-                endDate: new Date(body.endDate), // Ensure valid date object
-                totalAmount: Number(body.totalAmount), // Ensure number
-                documents: body.documents || {},
-                status: "Pending"
+        let booking;
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                booking = await prisma.booking.create({
+                    data: {
+                        id: generateShortId(),
+                        scooterId: body.scooterId,
+                        userId: body.userId || null,
+                        riderName: body.riderName,
+                        riderEmail: body.riderEmail,
+                        riderPhone: body.riderPhone,
+                        riderPassport: body.riderPassport,
+                        startDate: new Date(body.startDate),
+                        endDate: new Date(body.endDate),
+                        totalAmount: Number(body.totalAmount),
+                        documents: body.documents || {},
+                        status: "Pending"
+                    }
+                });
+                break; // Success
+            } catch (e: any) {
+                if (e.code === 'P2002' && e.meta?.target?.includes('id')) {
+                    retries--;
+                    if (retries === 0) throw e;
+                    continue; // Retry with new ID
+                }
+                throw e; // Other error
             }
-        });
+        }
+
+        if (!booking) throw new Error("Failed to create booking after retries");
 
         console.log("Booking created successfully:", booking.id);
         return NextResponse.json(booking, { status: 201 });
