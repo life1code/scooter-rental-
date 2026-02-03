@@ -13,7 +13,8 @@ fullnameOverride: ""
 
 serviceAccount:
   create: true
-  annotations: {}
+  annotations: 
+    eks.amazonaws.com/role-arn: "arn:aws:iam::YOUR_ACCOUNT_ID:role/scooter-rental-secrets-role"
   name: ""
 
 podAnnotations: {}

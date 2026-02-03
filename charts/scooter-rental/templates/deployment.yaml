@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "scooter-rental.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "scooter-rental.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
