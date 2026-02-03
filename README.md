@@ -2,6 +2,11 @@
 
 A modern, full-stack scooter rental application built with Next.js, optimized for high performance and automated deployment on AWS.
 
+## 📱 Scan to Visit
+Scan the QR code below to visit our website:
+
+![Ceylon Rider QR Code](public/images/qr-code.png)
+
 ## 🚀 Development Architecture
 
 ### 1. Modern Tech Stack
