@@ -23,6 +23,7 @@ model User {
 model Scooter {
   id              String   @id @default(uuid())
   name            String
+  model           String   @default("Standard")
   type            String
   pricePerDay     Float
   rating          Float    @default(5.0)
@@ -84,6 +85,10 @@ model Booking {
   
   // JSON for documents urls (idFront, idBack, passport, signature)
   documents       Json?
+
+  // Live GPS tracking
+  lastLat         Float?
+  lastLng         Float?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

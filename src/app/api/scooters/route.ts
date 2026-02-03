@@ -34,6 +34,7 @@ export async function POST(request: Request) {
         const newScooter = await prisma.scooter.create({
             data: {
                 name: body.name,
+                model: body.model || "Standard",
                 type: body.type,
                 pricePerDay: body.pricePerDay,
                 image: body.image,

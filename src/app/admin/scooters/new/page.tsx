@@ -54,10 +54,12 @@ export default function AddScooter() {
             // Get form data
             const formData = new FormData(e.target as HTMLFormElement);
             const name = formData.get('name') as string;
+            const model = formData.get('model') as string || name;
             const price = formData.get('price') as string;
 
             const scooterData = {
                 name: name,
+                model: model,
                 type: formData.get('type') || 'Scooter',
                 pricePerDay: parseFloat(price),
                 image: imagePreview || (formData.get('imageUrl') as string) || "/images/scooter-1.png",
@@ -137,11 +139,22 @@ export default function AddScooter() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Scooter Model Name</label>
+                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Scooter Model (for Dropdown Search)</label>
+                                    <input
+                                        type="text"
+                                        name="model"
+                                        placeholder="e.g. PCX, NMAX, TVS Ntorq"
+                                        required
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
+                                    />
+                                    <p className="text-[9px] text-white/20 italic ml-1">This value will appear in the home page filter dropdown.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase text-white/40 font-bold ml-1">Display Name</label>
                                     <input
                                         type="text"
                                         name="name"
-                                        placeholder="e.g. Honda PCX 160"
+                                        placeholder="e.g. Honda PCX 160cc - White"
                                         required
                                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
                                     />
