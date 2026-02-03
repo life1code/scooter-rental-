@@ -79,18 +79,26 @@ export default function Home() {
       // Real availability logic
       let isAvailable = true;
       if (dateRange?.from && dateRange?.to) {
-        const searchStart = new Date(dateRange.from).getTime();
-        const searchEnd = new Date(dateRange.to).getTime();
+        // Set search dates to start/end of day to avoid timezone/hour issues
+        const searchStart = new Date(dateRange.from);
+        searchStart.setHours(0, 0, 0, 0);
+        const searchEnd = new Date(dateRange.to);
+        searchEnd.setHours(23, 59, 59, 999);
+
+        const sTime = searchStart.getTime();
+        const eTime = searchEnd.getTime();
 
         // Check if any existing booking for this scooter overlaps with the search range
         const hasOverlay = allBookings.some(booking => {
           if (booking.scooterId !== scooter.id) return false;
+          // Only show as taken if confirmed/active
           if (booking.status === "Cancelled" || booking.status === "Completed") return false;
 
-          const bookingStart = new Date(booking.startDate).getTime();
-          const bookingEnd = new Date(booking.endDate).getTime();
+          const bStart = new Date(booking.startDate).getTime();
+          const bEnd = new Date(booking.endDate).getTime();
 
-          return (bookingStart < searchEnd) && (bookingEnd > searchStart);
+          // Standard overlap logic: (StartA < EndB) and (EndA > StartB)
+          return (bStart <= eTime) && (bEnd >= sTime);
         });
 
         isAvailable = !hasOverlay;
