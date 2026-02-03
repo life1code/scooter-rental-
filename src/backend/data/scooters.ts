@@ -29,7 +29,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 25,
         rating: 4.9,
         reviews: 245,
-        image: '/images/pcx.jpeg',
+        image: '/images/spotlight/honda-pcx.jpeg',
         description: 'Premium Honda PCX 160 with smooth handling and stylish design, perfect for long rides.',
         specs: {
             engine: '157cc',
@@ -49,7 +49,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 18,
         rating: 4.7,
         reviews: 189,
-        image: '/images/NTORQ.jpeg',
+        image: '/images/spotlight/tvs-ntorq.png',
         description: 'Sporty TVS NTORQ 125, known for its performance and smart connectivity features.',
         specs: {
             engine: '124.8cc',
@@ -69,7 +69,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 20,
         rating: 4.8,
         reviews: 132,
-        image: '/images/rayzr-yamaha-scooter.jpg',
+        image: '/images/spotlight/yamaha-rayzr.jpg',
         description: 'Lightweight and stylish Yamaha RayZR, ideal for city navigation and fuel efficiency.',
         specs: {
             engine: '125cc',
@@ -89,7 +89,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 15,
         rating: 4.6,
         reviews: 312,
-        image: '/images/dio old.jpeg',
+        image: '/images/spotlight/honda-dio.png',
         description: 'The classic Honda Dio, reliable and easy to ride for all skill levels.',
         specs: {
             engine: '110cc',
@@ -107,7 +107,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 22,
         rating: 4.8,
         reviews: 156,
-        image: '/images/suzuki burgman.jpeg',
+        image: '/images/spotlight/suzuki-burgman.jpeg',
         description: 'Maxi-scooter style Suzuki Burgman with extra storage and comfortable seating.',
         specs: {
             engine: '125cc',
@@ -127,7 +127,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 45,
         rating: 5.0,
         reviews: 87,
-        image: '/images/xmax.jpeg',
+        image: '/images/spotlight/yamaha-xmax.jpeg',
         description: 'Luxury Yamaha XMAX 300 for the ultimate riding experience with high-end features.',
         specs: {
             engine: '292cc',
@@ -145,7 +145,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 35,
         rating: 4.9,
         reviews: 124,
-        image: '/images/pcx.jpeg',
+        image: '/images/spotlight/honda-pcx.jpeg',
         description: 'Timeless Italian style with the power of a 150cc engine. Perfect for cruising in style.',
         specs: {
             engine: '155cc',
@@ -163,7 +163,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 28,
         rating: 4.7,
         reviews: 98,
-        image: '/images/NTORQ.jpeg',
+        image: '/images/spotlight/tvs-ntorq.png',
         description: 'The racer among scooters. High performance and aggressive styling for the thrill-seeker.',
         specs: {
             engine: '160cc',
@@ -181,7 +181,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 16,
         rating: 4.6,
         reviews: 210,
-        image: '/images/rayzr-yamaha-scooter.jpg',
+        image: '/images/spotlight/yamaha-rayzr.jpg',
         description: 'Practical, fuel-efficient, and comfortable. Best choice for daily commutes.',
         specs: {
             engine: '124cc',
@@ -199,7 +199,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 18,
         rating: 4.7,
         reviews: 165,
-        image: '/images/suzuki burgman.jpeg',
+        image: '/images/spotlight/suzuki-burgman.jpeg',
         description: 'A blend of retro design and modern performance. Very reliable and smooth.',
         specs: {
             engine: '124cc',
@@ -217,7 +217,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 32,
         rating: 4.9,
         reviews: 142,
-        image: '/images/xmax.jpeg',
+        image: '/images/spotlight/yamaha-xmax.jpeg',
         description: 'Compact urban maxi-scooter with ABS and premium comfort features.',
         specs: {
             engine: '155cc',
@@ -235,7 +235,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 20,
         rating: 4.8,
         reviews: 118,
-        image: '/images/dio old.jpeg',
+        image: '/images/spotlight/honda-grazia.jpeg',
         description: 'Modern, sharp, and feature-rich 125cc scooter from Honda.',
         specs: {
             engine: '124cc',
@@ -255,7 +255,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 24,
         rating: 4.7,
         reviews: 56,
-        image: '/images/pcx.jpeg',
+        image: '/images/spotlight/honda-pcx.jpeg',
         description: 'High-speed electric scooter with dual batteries. Modern tech for the modern traveler.',
         specs: {
             range: '100 km',
@@ -274,7 +274,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 65,
         rating: 5.0,
         reviews: 34,
-        image: '/images/xmax.jpeg',
+        image: '/images/spotlight/yamaha-xmax.jpeg',
         description: 'Premium adventure mid-size scooter with TFT display and connectivity.',
         specs: {
             engine: '350cc',
@@ -292,7 +292,7 @@ export const SCOOTERS: Scooter[] = [
         pricePerDay: 75,
         rating: 4.9,
         reviews: 82,
-        image: '/images/NTORQ.jpeg',
+        image: '/images/spotlight/tvs-ntorq.png',
         description: 'For those who want to go beyond the roads. Unmatched power and adventure capability.',
         specs: {
             engine: '373cc',

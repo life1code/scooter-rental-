@@ -17,21 +17,31 @@ import {
     Plus
 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function FleetManagement() {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [allScooters, setAllScooters] = useState<any[]>([]);
+    const { data: session, status } = useSession();
     const [isLoading, setIsLoading] = useState(true);
 
-    // Initial check for admin session
+    // Auth check
     useEffect(() => {
-        const isAdmin = localStorage.getItem("is_host_admin") === "true";
-        if (!isAdmin) {
+        if (status === "loading") return;
+        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+        const isGoogleAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+
+        if (status === "unauthenticated" || !isGoogleAdmin) {
             router.push("/admin/login");
         }
+    }, [status, session, router]);
 
+    // Data fetch
+    useEffect(() => {
         async function fetchFleet() {
+            if (status !== "authenticated") return;
+
             try {
                 setIsLoading(true);
                 const res = await fetch('/api/scooters');
@@ -40,7 +50,6 @@ export default function FleetManagement() {
                     if (data && data.length > 0) {
                         setAllScooters(data);
                     } else {
-                        // If DB is empty, show static template scooters
                         setAllScooters(SCOOTERS);
                     }
                 } else {
@@ -55,7 +64,7 @@ export default function FleetManagement() {
         }
 
         fetchFleet();
-    }, [router]);
+    }, [status]);
 
     const handleDelete = async (id: string, name: string) => {
         if (window.confirm(`Are you sure you want to remove ${name} from your fleet?`)) {

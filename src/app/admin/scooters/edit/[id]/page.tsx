@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Navbar } from "@/frontend/components/Navbar";
 import { SCOOTERS } from "@/backend/data/scooters";
 import {
@@ -49,15 +50,23 @@ export default function EditScooter() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [scooter, setScooter] = useState<Scooter | null>(null);
 
-    // Initial check for admin session and load scooter data
-    useEffect(() => {
-        const isAdmin = localStorage.getItem("is_host_admin") === "true";
-        if (!isAdmin) {
-            router.push("/admin/login");
-            return;
-        }
+    const { data: session, status } = useSession();
 
-        // Load scooter data
+    // Initial check for admin session
+    useEffect(() => {
+        if (status === "loading") return;
+        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+        const isGoogleAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+
+        if (status === "unauthenticated" || !isGoogleAdmin) {
+            router.push("/admin/login");
+        }
+    }, [status, session, router]);
+
+    // Load scooter data
+    useEffect(() => {
+        if (status !== "authenticated") return;
+
         const staticScooter = SCOOTERS.find(s => s.id === scooterId);
         const customScooters = JSON.parse(localStorage.getItem("custom_scooters") || "[]");
         const customScooter = customScooters.find((s: Scooter) => s.id === scooterId);
@@ -70,7 +79,7 @@ export default function EditScooter() {
         } else {
             router.push("/admin/fleet");
         }
-    }, [router, scooterId]);
+    }, [status, scooterId, router]);
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -98,7 +107,7 @@ export default function EditScooter() {
             ...scooter,
             name: formData.get('name') as string,
             pricePerDay: parseFloat(formData.get('price') as string),
-            image: imagePreview || formData.get('imageUrl') as string || scooter?.image || "/images/scooter-1.png",
+            image: imagePreview || formData.get('imageUrl') as string || scooter?.image || "/images/spotlight/honda-pcx.jpeg",
             rating: parseFloat(formData.get('rating') as string) || scooter?.rating || 5.0,
             specs: {
                 engine: formData.get('engine') as string,

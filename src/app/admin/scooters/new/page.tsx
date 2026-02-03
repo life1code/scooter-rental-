@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Navbar } from "@/frontend/components/Navbar";
 import {
     ArrowLeft,
@@ -23,13 +24,18 @@ export default function AddScooter() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
+    const { data: session, status } = useSession();
+
     // Initial check for admin session
     useEffect(() => {
-        const isAdmin = localStorage.getItem("is_host_admin") === "true";
-        if (!isAdmin) {
+        if (status === "loading") return;
+        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+        const isGoogleAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+
+        if (status === "unauthenticated" || !isGoogleAdmin) {
             router.push("/admin/login");
         }
-    }, [router]);
+    }, [status, session, router]);
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -62,7 +68,7 @@ export default function AddScooter() {
                 model: model,
                 type: formData.get('type') || 'Scooter',
                 pricePerDay: parseFloat(price),
-                image: imagePreview || (formData.get('imageUrl') as string) || "/images/scooter-1.png",
+                image: imagePreview || (formData.get('imageUrl') as string) || "/images/spotlight/honda-pcx.jpeg",
                 rating: parseFloat(formData.get('rating') as string) || 5.0,
                 status: 'Available',
                 description: "Premium scooter added by host.",
