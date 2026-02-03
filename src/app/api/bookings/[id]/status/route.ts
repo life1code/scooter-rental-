@@ -23,7 +23,31 @@ export async function PATCH(
         const updatedBooking = await prisma.booking.update({
             where: { id },
             data: dataToUpdate,
+            include: { scooter: true } // Include scooter details for email
         });
+
+        // Send confirmation email if status changes to Active (Approved)
+        if (status === 'Active' && updatedBooking.riderEmail) {
+            try {
+                await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/email/notify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'approval',
+                        booking: {
+                            id: updatedBooking.id,
+                            rider: updatedBooking.riderName,
+                            riderEmail: updatedBooking.riderEmail,
+                            bike: updatedBooking.scooter.name,
+                            ownerWhatsapp: updatedBooking.scooter.ownerWhatsapp
+                        }
+                    })
+                });
+                console.log(`📧 Approval email sent to ${updatedBooking.riderEmail}`);
+            } catch (emailError) {
+                console.error("Failed to send approval email:", emailError);
+            }
+        }
 
         return NextResponse.json(updatedBooking);
     } catch (error) {

@@ -3,26 +3,19 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { User, LogOut, Menu, Bike } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/backend/lib/utils";
 
 export function Navbar() {
     const { data: session } = useSession();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLocalAdmin, setIsLocalAdmin] = useState(false);
 
-    useEffect(() => {
-        // Check for local admin login
-        const isAdmin = localStorage.getItem("is_host_admin") === "true";
-        setIsLocalAdmin(isAdmin);
-    }, []);
-
-    const isAdmin = session?.user?.email === "smilylife996cha@gmail.com" || isLocalAdmin;
+    // Define allowed admin emails
+    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
     const handleSignOut = () => {
-        localStorage.removeItem("is_host_admin");
-        document.cookie = "is_host_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        signOut();
+        signOut({ callbackUrl: '/' });
     };
 
     return (

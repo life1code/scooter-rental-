@@ -104,6 +104,61 @@ export async function POST(request: Request) {
             }
         }
 
+        // Generate PDF and send email notification
+        try {
+            const { generateAgreementBase64 } = await import('@/reportservice/pdf-service');
+
+            // Fetch scooter details for the PDF
+            const scooter = await prisma.scooter.findUnique({
+                where: { id: body.scooterId }
+            });
+
+            // Prepare booking data for PDF
+            const pdfData = {
+                id: booking?.id,
+                rider: body.riderName,
+                bike: scooter?.name || 'Scooter',
+                amount: `$${body.totalAmount}`,
+                date: new Date().toLocaleDateString(),
+                bookingTime: new Date().toLocaleTimeString(),
+                rentalPeriod: `${new Date(body.startDate).toLocaleDateString()} - ${new Date(body.endDate).toLocaleDateString()}`,
+                pricePerDay: scooter?.pricePerDay || 25,
+                details: {
+                    passport: body.riderPassport,
+                    phone: body.riderPhone,
+                    idFront: body.documents?.idFront,
+                    idBack: body.documents?.idBack,
+                    passportImg: body.documents?.passport,
+                    signature: body.documents?.signature
+                }
+            };
+
+            const agreementPdf = generateAgreementBase64(pdfData);
+
+            // Send email with PDF attachment
+            await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/email/notify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'booking',
+                    booking: {
+                        id: booking?.id,
+                        rider: body.riderName,
+                        riderEmail: body.riderEmail,
+                        bike: scooter?.name || 'Scooter',
+                        amount: `$${body.totalAmount}`,
+                        startDate: new Date(body.startDate).toLocaleDateString(),
+                        agreementPdf: agreementPdf
+                    }
+                })
+            });
+
+            console.log(`📧 Booking confirmation email sent to ${body.riderEmail}`);
+        } catch (emailError) {
+            console.error('Failed to send booking email:', emailError);
+            // Don't fail the booking if email fails
+        }
+
         return NextResponse.json(booking, { status: 201 });
     } catch (error: any) {
         console.error("Error creating booking:", error);
