@@ -39,9 +39,9 @@ ingress:
   enabled: true
   className: "traefik"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # traefik.ingress.kubernetes.io/router.tls: "true"
   hosts:
     - host: ceylonrider.com
       paths:
@@ -51,11 +51,11 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-  tls:
-    - secretName: scooter-rental-tls
-      hosts:
-        - ceylonrider.com
-        - adminer.ceylonrider.com
+  # tls:
+  #   - secretName: scooter-rental-tls
+  #     hosts:
+  #       - ceylonrider.com
+  #       - adminer.ceylonrider.com
 
 resources: 
   limits:
@@ -77,9 +77,13 @@ tolerations: []
 
 nextauth:
   secret: "change-me-to-something-long-and-random"
-  baseUrl: "http://3.25.163.22:30080"
+  baseUrl: "http://ceylonrider.com"
 
 affinity: {}
 
 database:
   url: "postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
+
+google:
+  clientId: "dummy-id"
+  clientSecret: "dummy-secret"
