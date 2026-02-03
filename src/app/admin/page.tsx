@@ -1,7 +1,7 @@
 "use client";
 
 import { Navbar } from "@/frontend/components/Navbar";
-import { SCOOTERS } from "@/backend/data/scooters";
+
 import {
     LayoutDashboard,
     Bike,
@@ -96,6 +96,7 @@ export default function AdminDashboard() {
     const { showToast } = useToast();
     const router = useRouter();
     const [bookings, setBookings] = useState<any[]>([]);
+    const [scooters, setScooters] = useState<any[]>([]);
     const [stats, setStats] = useState<any[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
     const [confirmAction, setConfirmAction] = useState<{ id: string, status: string } | null>(null);
@@ -133,9 +134,65 @@ export default function AdminDashboard() {
         }
     };
 
+    const fetchScooters = async () => {
+        try {
+            const res = await fetch('/api/scooters');
+            if (res.ok) {
+                const data = await res.json();
+                setScooters(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch scooters:", error);
+        }
+    };
+
+    const downloadFleetReport = () => {
+        const headers = ["Scooter Name", "Model", "Price/Day", "Total Revenue", "Total Rentals", "Total Days Rented", "Current Status"];
+
+        const rows = scooters.map(s => {
+            // Aggregate booking data for this scooter
+            const scooterBookings = bookings.filter(b => b.scooter?.id === s.id);
+
+            const revenue = scooterBookings.reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+            const rentals = scooterBookings.length;
+
+            const daysRented = scooterBookings.reduce((sum, b) => {
+                if (!b.startDate || !b.endDate) return sum;
+                const start = new Date(b.startDate);
+                const end = new Date(b.endDate);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return sum + (diffDays > 0 ? diffDays : 0);
+            }, 0);
+
+            return [
+                `"${s.name}"`, // Quote to handle commas
+                `"${s.model}"`,
+                `$${s.pricePerDay}`,
+                `$${revenue.toFixed(2)}`,
+                rentals,
+                daysRented,
+                s.status
+            ].join(",");
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `fleet_performance_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     useEffect(() => {
         fetchBookings();
-        const interval = setInterval(fetchBookings, 10000); // Poll every 10s for GPS updates
+        fetchScooters();
+        const interval = setInterval(() => {
+            fetchBookings();
+            // fetchScooters(); // Optional to poll scooters too if status changes often
+        }, 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -359,25 +416,43 @@ export default function AdminDashboard() {
 
                     {/* Fleet Status */}
                     <div className="space-y-6">
-                        <h2 className="text-xl font-bold">Fleet Performance</h2>
-                        <div className="glass-card p-6 space-y-6">
-                            {SCOOTERS.slice(0, 3).map((scooter) => (
-                                <div key={scooter.id} className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0">
-                                        <img src={scooter.image} alt="" className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold truncate">{scooter.name}</p>
-                                        <div className="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-                                            <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: `${scooter.rating * 20}%` }}></div>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold">Fleet Performance</h2>
+                            <button
+                                onClick={downloadFleetReport}
+                                className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary)] font-bold rounded-xl hover:bg-[var(--primary)]/20 transition-colors text-xs uppercase tracking-wider"
+                            >
+                                <Download className="w-4 h-4" /> Download Report
+                            </button>
+                        </div>
+                        <div className="glass-card p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                            {scooters.map((scooter) => {
+                                // Calculate revenue for display
+                                const scooterRevenue = bookings
+                                    .filter(b => b.scooter?.id === scooter.id)
+                                    .reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0);
+
+                                return (
+                                    <div key={scooter.id} className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0">
+                                            <img src={scooter.image} alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <p className="text-sm font-bold truncate">{scooter.name}</p>
+                                                <p className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded uppercase">{scooterRevenue > 0 ? `+$${scooterRevenue}` : '$0'}</p>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
+                                                <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: `${(scooter.rating || 5) * 20}%` }}></div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold">${scooter.pricePerDay}</p>
+                                            <p className="text-[10px] text-white/40 uppercase font-bold">/ Day Rate</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold">${scooter.pricePerDay}</p>
-                                        <p className="text-[10px] text-white/40 uppercase font-bold">/ Day Rate</p>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

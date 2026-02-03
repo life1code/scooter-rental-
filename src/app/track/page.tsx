@@ -2,7 +2,7 @@
 
 import { Navbar } from "@/frontend/components/Navbar";
 import {
-    MapPin, Navigation, ChevronLeft, Battery, Radio,
+    MapPin, Navigation, ChevronLeft, Radio,
     ShieldCheck, User, Phone, Info, MessageSquare,
     Wrench, AlertTriangle, HelpCircle, Bike, CreditCard, X
 } from "lucide-react";
@@ -237,13 +237,7 @@ function MyBookingsContent() {
                     </div>
 
                     <div className="flex items-center gap-2 bg-white/5 p-3 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
-                        <div className="flex items-center gap-2 pr-4 border-r border-white/10 shrink-0">
-                            <Battery className="w-5 h-5 text-green-500" />
-                            <div>
-                                <p className="text-[10px] font-bold text-white/40 uppercase">Battery</p>
-                                <p className="text-sm font-bold text-green-500">87%</p>
-                            </div>
-                        </div>
+
                         <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0">
                             <Radio className="w-5 h-5 text-[var(--primary)] animate-pulse" />
                             <div>
