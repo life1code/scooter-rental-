@@ -103,12 +103,12 @@ export default function Home() {
           />
         </div>
 
-        <div className="relative z-10 text-center space-y-4 max-w-3xl mb-12 md:mb-0">
-          <h1 className="text-4xl md:text-7xl font-bold tracking-tighter">
-            Ride the <span className="neon-text">Future</span>
+        <div className="relative z-10 text-center space-y-6 max-w-4xl mb-12 md:mb-0">
+          <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-tight">
+            Freedom on <span className="text-[var(--primary)] neon-text">Two Wheels.</span>
           </h1>
-          <p className="text-white/60 text-lg md:text-xl font-medium max-w-xl mx-auto">
-            Experience the city like never before with our premium fleet of electric scooters and motorbikes.
+          <p className="text-white/70 text-xl md:text-2xl font-medium max-w-2xl mx-auto italic">
+            "Comfortable scooters. Easy booking. Ride your way"
           </p>
         </div>
 
