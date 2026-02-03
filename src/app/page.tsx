@@ -103,11 +103,11 @@ export default function Home() {
           />
         </div>
 
-        <div className="relative z-10 text-center space-y-4 max-w-4xl mb-12 md:mb-0">
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight drop-shadow-xl">
+        <div className="relative z-10 text-center space-y-3 max-w-4xl mb-12 md:mb-0">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight drop-shadow-lg">
             Freedom on <span className="text-[var(--primary)] neon-text">Two Wheels.</span>
           </h1>
-          <p className="text-white/70 text-lg md:text-xl font-medium max-w-2xl mx-auto italic">
+          <p className="text-white/60 text-base md:text-lg font-medium max-w-2xl mx-auto italic">
             "Comfortable scooters. Easy booking. Ride your way"
           </p>
         </div>
