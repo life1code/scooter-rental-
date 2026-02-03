@@ -1,3 +1,5 @@
+"use client";
+
 import { signIn, useSession } from "next-auth/react";
 import { Navbar } from "@/frontend/components/Navbar";
 import { Star, Quote, ThumbsUp, MessageSquare, ChevronLeft, Search, X } from "lucide-react";
