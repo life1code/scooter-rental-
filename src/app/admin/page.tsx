@@ -100,11 +100,18 @@ export default function AdminDashboard() {
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
     const [confirmAction, setConfirmAction] = useState<{ id: string, status: string } | null>(null);
 
-    useEffect(() => {
-        const isLocalAdmin = localStorage.getItem("is_host_admin") === "true";
-        const isGoogleAdmin = status === "authenticated" && session?.user?.email === "smilylife996cha@gmail.com";
+    // Define allowed admin emails
+    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
 
-        if (status !== "loading" && !isLocalAdmin && !isGoogleAdmin) {
+    useEffect(() => {
+        // Only allow access if authenticated with Google OAuth and email is in admin list
+        if (status === "loading") return;
+
+        const isGoogleAdmin = status === "authenticated" &&
+            session?.user?.email &&
+            ADMIN_EMAILS.includes(session.user.email);
+
+        if (!isGoogleAdmin) {
             router.push("/admin/login");
         }
     }, [status, session, router]);

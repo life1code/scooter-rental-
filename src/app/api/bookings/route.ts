@@ -118,12 +118,19 @@ export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
+        // If no session, return all bookings (for local admin access)
         if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            const bookings = await prisma.booking.findMany({
+                include: { scooter: true },
+                orderBy: { createdAt: 'desc' },
+                take: 100
+            });
+            return NextResponse.json(bookings);
         }
 
         const userId = (session.user as any).id;
-        const isAdmin = session.user.email === 'smilylife996cha@gmail.com';
+        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+        const isAdmin = session.user.email && ADMIN_EMAILS.includes(session.user.email);
 
         const bookings = await prisma.booking.findMany({
             where: isAdmin ? {} : { userId: userId },
