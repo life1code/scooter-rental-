@@ -4,47 +4,39 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { Lock, ShieldCheck, LogOut, AlertTriangle } from "lucide-react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/frontend/components/ToastProvider";
 
 export default function AdminLogin() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { showToast } = useToast();
 
     const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
 
     useEffect(() => {
+        if (status === "loading") return;
+
         if (status === "authenticated" && session?.user?.email) {
             if (ADMIN_EMAILS.includes(session.user.email)) {
+                // Authorized: Go to Dashboard
                 router.push("/admin");
+            } else {
+                // Unauthorized: Show smart error and redirect home
+                showToast("Access Denied: Admin privileges required.", "error");
+                router.push("/");
             }
         }
-    }, [status, session, router]);
+    }, [status, session, router, showToast]);
 
     const handleGoogleSignIn = () => {
         signIn("google", { callbackUrl: "/admin" });
     };
 
-    // Show unauthorized view if logged in but not admin
+    // Show loading state while checking
     if (status === "authenticated" && session?.user?.email && !ADMIN_EMAILS.includes(session.user.email)) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--background)]">
-                <div className="w-full max-w-md glass-card p-10 text-center space-y-6">
-                    <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto border border-red-500/20">
-                        <AlertTriangle className="w-8 h-8 text-red-500" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
-                        <p className="text-white/40 text-sm">
-                            The account <strong>{session.user.email}</strong> is not authorized to access the admin dashboard.
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => signOut({ callbackUrl: '/' })}
-                        className="w-full btn-secondary flex items-center justify-center gap-2"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out & Return Home</span>
-                    </button>
-                </div>
+            <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--primary)]"></div>
             </div>
         );
     }
