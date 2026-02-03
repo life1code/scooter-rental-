@@ -85,10 +85,6 @@ model Booking {
   // JSON for documents urls (idFront, idBack, passport, signature)
   documents       Json?
 
-  // Live GPS tracking
-  lastLat         Float?
-  lastLng         Float?
-
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

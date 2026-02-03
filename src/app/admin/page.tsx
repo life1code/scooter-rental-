@@ -38,55 +38,7 @@ interface Booking {
     amount: string;
 }
 
-const TrackingMap = ({ activeBookings }: { activeBookings: any[] }) => {
-    const [mapLoaded, setMapLoaded] = useState(false);
 
-    useEffect(() => {
-        setMapLoaded(true);
-    }, []);
-
-    if (!mapLoaded) return (
-        <div className="w-full h-[400px] flex items-center justify-center bg-white/5 rounded-2xl border border-white/10">
-            <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
-        </div>
-    );
-
-    const { MapContainer, TileLayer, Marker, Popup } = require('react-leaflet');
-    const L = require('leaflet');
-
-    const icon = L.icon({
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41]
-    });
-
-    const activeWithGPS = activeBookings.filter(b => b.lastLat && b.lastLng);
-
-    return (
-        <div className="w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 relative z-10">
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-            <style>{`
-                .leaflet-container { background: #0a0c0f !important; }
-                .leaflet-tile { filter: grayscale(1) invert(1) opacity(0.2); }
-            `}</style>
-            <MapContainer center={[6.0022, 80.2484]} zoom={13} className="w-full h-full">
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {activeWithGPS.map((booking) => (
-                    <Marker key={booking.id} position={[booking.lastLat, booking.lastLng]} icon={icon}>
-                        <Popup>
-                            <div className="text-black">
-                                <p className="font-bold">{booking.riderName}</p>
-                                <p className="text-xs">{booking.scooter?.name}</p>
-                                <p className="text-[10px] uppercase font-bold text-blue-600">{booking.status}</p>
-                            </div>
-                        </Popup>
-                    </Marker>
-                ))}
-            </MapContainer>
-        </div>
-    );
-};
 
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
@@ -193,19 +145,7 @@ export default function AdminDashboard() {
                     ))}
                 </div>
 
-                {/* Live Tracking Map Section */}
-                <div className="mb-12 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold">Live Fleet Tracking</h2>
-                        <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-green-500">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            Live Updates Active
-                        </span>
-                    </div>
-                    <div className="glass-card p-4 border-white/5">
-                        <TrackingMap activeBookings={bookings.filter(b => b.status === "Active")} />
-                    </div>
-                </div>
+
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Recent Requests Table */}
