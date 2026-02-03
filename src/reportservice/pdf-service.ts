@@ -10,26 +10,23 @@ export const generateRentalAgreement = (booking: any) => {
     doc.setFillColor(33, 33, 33); // Dark background common in premium designs
     doc.rect(0, 0, 210, 45, 'F');
 
-    // Logo (placeholder for real base64 or path-to-base64 conversion)
-    // In a real browser environment, we'd fetch the logo.
+    // Logo position: Left side
     try {
-        // Logo position: Left side
-        // doc.addImage("/images/pdf-logo.png", "PNG", 15, 5, 45, 35); 
-        // Note: For this demo, I'll keep the text-based branding if image fails, 
-        // but I've prepared the slot for the logo.
+        // We use the public path which will resolve in the browser
+        doc.addImage("/images/pdf-logo.png", "PNG", 15, 7, 40, 30);
     } catch (e) {
-        console.error("Logo failed to load:", e);
+        console.error("Logo failed to load (this is expected in some dev environments):", e);
     }
 
-    // Title & Booking ID (Centered as per image)
+    // Title & Booking ID (Right aligned to balance the logo)
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
+    doc.setFontSize(26);
     doc.setFont("helvetica", "bold");
-    doc.text("RENTAL AGREEMENT", 125, 22, { align: "center" });
+    doc.text("RENTAL AGREEMENT", 195, 24, { align: "right" });
 
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`Booking ID: ${booking.id}`, 125, 32, { align: "center" });
+    doc.text(`Booking ID: ${booking.id}`, 195, 34, { align: "right" });
 
     doc.setTextColor(0, 0, 0); // Reset for content
 
