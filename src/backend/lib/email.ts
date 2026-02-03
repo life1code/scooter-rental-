@@ -68,7 +68,7 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
             'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-            from: 'Rydex <onboarding@resend.dev>', // Change to verified domain later
+            from: 'Rydex <info@ceylonrider.com>',
             to: [booking.riderEmail],
             subject: subject,
             html: html,
