@@ -3,9 +3,10 @@ import { prisma } from "@/backend/lib/db";
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const { lat, lng } = await request.json();
 
         if (!lat || !lng) {
@@ -13,7 +14,7 @@ export async function PATCH(
         }
 
         const updatedBooking = await prisma.booking.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 lastLat: lat,
                 lastLng: lng
