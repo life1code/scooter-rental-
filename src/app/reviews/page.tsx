@@ -1,5 +1,4 @@
-"use client";
-
+import { signIn, useSession } from "next-auth/react";
 import { Navbar } from "@/frontend/components/Navbar";
 import { Star, Quote, ThumbsUp, MessageSquare, ChevronLeft, Search, X } from "lucide-react";
 import React, { useState, useEffect } from "react";
@@ -8,6 +7,7 @@ import Link from "next/link";
 const REVIEWS = []; // Logic moved to API
 
 export default function ReviewsPage() {
+    const { data: session } = useSession();
     const [reviews, setReviews] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -18,13 +18,25 @@ export default function ReviewsPage() {
         location: '',
         bike: '',
         rating: 5,
-        content: ''
+        content: '',
+        avatar: ''
     });
 
     useEffect(() => {
         fetchReviews();
         fetchBikes();
     }, []);
+
+    // Update form with session data when modal opens or session loads
+    useEffect(() => {
+        if (session?.user) {
+            setForm(prev => ({
+                ...prev,
+                name: session.user?.name || prev.name,
+                avatar: session.user?.image || prev.avatar
+            }));
+        }
+    }, [session, isModalOpen]);
 
     async function fetchReviews() {
         try {
@@ -49,16 +61,23 @@ export default function ReviewsPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+
+        // Ensure avatar is set from session if available at submit time
+        const submissionData = {
+            ...form,
+            avatar: session?.user?.image || form.avatar
+        };
+
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
-                body: JSON.stringify(form),
+                body: JSON.stringify(submissionData),
                 headers: { 'Content-Type': 'application/json' }
             });
             if (res.ok) {
                 await fetchReviews();
                 setIsModalOpen(false);
-                setForm({ name: '', location: '', bike: '', rating: 5, content: '' });
+                setForm({ name: '', location: '', bike: '', rating: 5, content: '', avatar: '' });
                 alert("Thanks for your review!");
             }
         } catch (error) {
@@ -183,10 +202,31 @@ export default function ReviewsPage() {
                     <div className="glass-card max-w-lg w-full p-8 relative z-10 animate-in zoom-in-95">
                         <h2 className="text-3xl font-bold mb-6">Write a Review</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* Avatar Preview */}
+                            {form.avatar && (
+                                <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--primary)]">
+                                        <img src={form.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Posting as</p>
+                                        <p className="text-xs text-white/60">{form.name}</p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-bold uppercase text-white/60 mb-2">Your Name</label>
-                                <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-base"
-                                    value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="John Doe" />
+                                <input
+                                    required
+                                    type="text"
+                                    className={`w-full bg-white/5 border border-white/10 rounded-xl p-4 text-base ${session?.user ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    value={form.name}
+                                    onChange={e => !session?.user && setForm({ ...form, name: e.target.value })}
+                                    readOnly={!!session?.user}
+                                    placeholder="John Doe"
+                                />
+                                {session?.user && <p className="text-[10px] text-white/40 mt-1">Linked to your Google account</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-bold uppercase text-white/60 mb-2">Location</label>

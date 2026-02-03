@@ -38,7 +38,7 @@ export async function POST(request: Request) {
                 rating: body.rating,
                 content: body.content,
                 bike: body.bike || "General Rental",
-                avatar: `https://i.pravatar.cc/150?u=${Math.random().toString(36).substring(7)}` // Random avatar
+                avatar: body.avatar || `https://i.pravatar.cc/150?u=${Math.random().toString(36).substring(7)}` // Use provided avatar or random
             }
         });
 
