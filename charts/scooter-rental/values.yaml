@@ -76,14 +76,14 @@ nodeSelector: {}
 tolerations: []
 
 nextauth:
-  secret: "change-me-to-something-long-and-random"
+  secret: "DUMMY_SECRET_MANAGED_BY_AWS"
   baseUrl: "http://ceylonrider.com"
 
 affinity: {}
 
 database:
-  url: "postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
+  url: "postgresql://DUMMY_USER:DUMMY_PASSWORD@DUMMY_HOST:5432/postgres?sslmode=require"
 
 google:
-  clientId: "1015477203320-evp3sc4pg4fivqjb1klkh96lagiej09m.apps.googleusercontent.com"
-  clientSecret: "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"
+  clientId: "DUMMY_CLIENT_ID"
+  clientSecret: "DUMMY_CLIENT_SECRET"

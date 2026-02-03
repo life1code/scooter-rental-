@@ -36,15 +36,35 @@ spec:
               protocol: TCP
           env:
             - name: DATABASE_URL
-              value: {{ .Values.database.url | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: DATABASE_URL
             - name: NEXTAUTH_SECRET
-              value: {{ .Values.nextauth.secret | default "super-secret-placeholder" | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: NEXTAUTH_SECRET
             - name: NEXTAUTH_URL
               value: {{ .Values.nextauth.baseUrl | default (printf "https://%s" (index .Values.ingress.hosts 0).host) | quote }}
             - name: NEXT_PUBLIC_BASE_URL
               value: {{ .Values.nextauth.baseUrl | default (printf "https://%s" (index .Values.ingress.hosts 0).host) | quote }}
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: GOOGLE_CLIENT_SECRET
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -57,5 +77,12 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "scooter-rental.fullname" . }}-aws-secrets
 
 
