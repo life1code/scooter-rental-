@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { cn } from "@/backend/lib/utils";
 
 const TROUBLESHOOT_GUIDES = {
     start: {
@@ -46,9 +47,12 @@ const TROUBLESHOOT_GUIDES = {
 function MyBookingsContent() {
     const searchParams = useSearchParams();
     const bookingId = searchParams.get("id");
-    const [booking, setBooking] = useState<any>(null);
+    const [bookings, setBookings] = useState<any[]>([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
     const [activeGuide, setActiveGuide] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const booking = bookings[selectedIndex];
 
     const handleNotifyOwner = () => {
         if (!booking || !activeGuide) return;
@@ -71,53 +75,58 @@ function MyBookingsContent() {
     }, []);
 
     useEffect(() => {
-        async function fetchBooking() {
+        async function fetchBookings() {
             setIsLoading(true);
             try {
-                // Priority 1: ID from URL
-                if (bookingId) {
-                    const res = await fetch(`/api/bookings/${bookingId}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setBooking(data);
-                        return;
-                    }
-                }
+                let allBookings: any[] = [];
 
-                // Priority 2: Fetch all user bookings from API
+                // Priority 1: Fetch all user bookings from API
                 const apiRes = await fetch('/api/bookings');
                 if (apiRes.ok) {
-                    const bookingsData = await apiRes.json();
-                    if (bookingsData.length > 0) {
-                        setBooking(bookingsData[0]); // Show latest booking
-                        return;
-                    }
+                    allBookings = await apiRes.json();
                 }
 
                 // Priority 3: Local Storage (Legacy Fallback)
                 const localBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
-                if (localBookings.length > 0) {
-                    const latest = localBookings[0];
+
+                // Merge and deduplicate by ID
+                const mergedMap = new Map();
+                allBookings.forEach(b => mergedMap.set(b.id, b));
+                localBookings.forEach((b: any) => {
                     // Handle legacy flat structure if needed
-                    if (!latest.scooter && latest.scooterImage) {
-                        latest.scooter = {
-                            name: latest.bike,
-                            image: latest.scooterImage,
-                            location: latest.location,
-                            ownerName: latest.ownerName,
-                            ownerWhatsapp: latest.ownerWhatsapp
+                    if (!b.scooter && b.scooterImage) {
+                        b.scooter = {
+                            name: b.bike,
+                            image: b.scooterImage,
+                            location: b.location,
+                            ownerName: b.ownerName,
+                            ownerWhatsapp: b.ownerWhatsapp
                         };
                     }
-                    setBooking(latest);
+                    if (!mergedMap.has(b.id)) {
+                        mergedMap.set(b.id, b);
+                    }
+                });
+
+                const finalBookings = Array.from(mergedMap.values()).sort((a, b) =>
+                    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+                );
+
+                setBookings(finalBookings);
+
+                // Set initial selection based on URL ID
+                if (bookingId) {
+                    const index = finalBookings.findIndex(b => b.id === bookingId);
+                    if (index !== -1) setSelectedIndex(index);
                 }
             } catch (error) {
-                console.error("Failed to fetch booking:", error);
+                console.error("Failed to fetch bookings:", error);
             } finally {
                 setIsLoading(false);
             }
         }
 
-        fetchBooking();
+        fetchBookings();
     }, [bookingId]);
 
     // Geolocation Tracking
@@ -154,7 +163,7 @@ function MyBookingsContent() {
         );
     }
 
-    if (!booking) {
+    if (bookings.length === 0) {
         return (
             <main className="min-h-screen bg-[var(--background)]">
                 <Navbar />
@@ -222,46 +231,85 @@ function MyBookingsContent() {
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 pt-12 space-y-10">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-2">
-                        <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-2">
-                            <ChevronLeft className="w-4 h-4" />
-                            <span>Back to Home</span>
-                        </Link>
-                        <h1 className="text-4xl font-bold tracking-tight">My <span className="text-[var(--primary)]">Booking</span></h1>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] bg-[var(--primary)]/10 text-[var(--primary)] font-bold uppercase ring-1 ring-[var(--primary)]/20">
-                                {booking.status}
-                            </span>
-                            <div className="text-white/40 text-sm italic flex flex-wrap items-center gap-2">
-                                <span>ID: {booking.id}</span>
-                                {booking.startDate && booking.endDate && (
-                                    <>
-                                        <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block"></span>
-                                        <span className="text-[var(--primary)]/60 font-medium">
-                                            {new Date(booking.startDate).toLocaleDateString()} — {new Date(booking.endDate).toLocaleDateString()}
-                                        </span>
-                                    </>
-                                )}
+                <div className="space-y-6">
+                    <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-2">
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Back to Home</span>
+                    </Link>
+
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <h1 className="text-4xl font-bold tracking-tight">My <span className="text-[var(--primary)]">Bookings</span></h1>
+                            <p className="text-white/40 text-sm">You have {bookings.length} active rental{bookings.length > 1 ? 's' : ''}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-white/5 p-3 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
+                            <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0">
+                                <Radio className="w-5 h-5 text-[var(--primary)] animate-pulse" />
+                                <div>
+                                    <p className="text-[10px] font-bold text-white/40 uppercase">Signal</p>
+                                    <p className="text-sm font-bold">Excellent</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 pl-4 shrink-0">
+                                <ShieldCheck className="w-5 h-5 text-[var(--primary)]" />
+                                <div>
+                                    <p className="text-[10px] font-bold text-white/40 uppercase">Security</p>
+                                    <p className="text-sm font-bold">Safe</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-white/5 p-3 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
-
-                        <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0">
-                            <Radio className="w-5 h-5 text-[var(--primary)] animate-pulse" />
-                            <div>
-                                <p className="text-[10px] font-bold text-white/40 uppercase">Signal</p>
-                                <p className="text-sm font-bold">Excellent</p>
-                            </div>
+                    {/* Booking Selector - Multiple Bookings UI */}
+                    {bookings.length > 1 && (
+                        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                            {bookings.map((b, idx) => (
+                                <button
+                                    key={b.id}
+                                    onClick={() => setSelectedIndex(idx)}
+                                    className={cn(
+                                        "flex items-center gap-4 p-4 rounded-2xl border transition-all shrink-0 min-w-[240px]",
+                                        selectedIndex === idx
+                                            ? "glass-card border-[var(--primary)]/50 bg-[var(--primary)]/10"
+                                            : "glass-card border-white/5 hover:border-white/20"
+                                    )}
+                                >
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 shrink-0">
+                                        <img src={b.scooter?.image || "/images/pcx.jpeg"} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-bold text-sm truncate">{b.scooter?.name}</p>
+                                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{b.id}</p>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <span className={cn(
+                                                "w-1.5 h-1.5 rounded-full",
+                                                b.status === 'Active' ? "bg-green-500" : "bg-orange-500"
+                                            )}></span>
+                                            <span className="text-[9px] text-white/60 font-medium uppercase tracking-widest">{b.status}</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-2 pl-4 shrink-0">
-                            <ShieldCheck className="w-5 h-5 text-[var(--primary)]" />
-                            <div>
-                                <p className="text-[10px] font-bold text-white/40 uppercase">Security</p>
-                                <p className="text-sm font-bold">Safe</p>
-                            </div>
+                    )}
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-[var(--primary)]/10 text-[var(--primary)] font-bold uppercase ring-1 ring-[var(--primary)]/20">
+                            {booking.status}
+                        </span>
+                        <div className="text-white/40 text-sm italic flex flex-wrap items-center gap-2">
+                            <span>ID: {booking.id}</span>
+                            {booking.startDate && booking.endDate && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block"></span>
+                                    <span className="text-[var(--primary)]/60 font-medium">
+                                        {new Date(booking.startDate).toLocaleDateString()} — {new Date(booking.endDate).toLocaleDateString()}
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
