@@ -290,31 +290,12 @@ export default function BookingConfirm() {
                 details: bookingData.documents
             });
 
-            // Simulate sending initial booking agreement
+            // Email is now handled exclusively by the backend API to avoid duplicates
+            /* 
             simulateEmailNotification('booking', {
-                id: savedBooking.id,
-                rider: bookingData.riderName,
-                riderEmail: bookingData.riderEmail,
-                bike: scooter?.name || "Scooter",
-                scooterId: scooter?.id,
-                ownerName: scooter?.ownerName || "Ride Owner",
-                ownerWhatsapp: scooter?.ownerWhatsapp || "+94700000000",
-                scooterImage: scooter?.image,
-                location: scooter?.location || "Unawatuna",
-                date: format(new Date(), 'MMM dd, yyyy'),
-                status: "Pending",
-                amount: `$${totalPrice.toFixed(2)}`,
-                pricePerDay: scooter?.pricePerDay || 25,
-                agreementPdf: agreementBase64, // Pass the base64 to the email service
-                details: {
-                    passport: bookingData.riderPassport,
-                    phone: bookingData.riderPhone,
-                    idFront: previews.licenseFront,
-                    idBack: previews.licenseBack,
-                    passportImg: previews.passport,
-                    signature: signatureData
-                }
+                ...
             });
+            */
 
             // Save to localStorage for "My Bookings" page
             try {
