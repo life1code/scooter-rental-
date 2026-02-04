@@ -205,16 +205,23 @@ function MyBookingsContent() {
         const { MapContainer, TileLayer, Marker, Popup, useMap } = require('react-leaflet');
         const L = require('leaflet');
 
-        const icon = L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+        const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+
+        const getIcon = (color: string) => L.icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             iconSize: [25, 41],
-            iconAnchor: [12, 41]
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
         });
 
         const RecenterMap = ({ coords }: { coords: { lat: number; lng: number } }) => {
             const map = useMap();
-            map.setView([coords.lat, coords.lng], 15);
+            // Only recenter if we change selection or it's first render
+            useEffect(() => {
+                if (coords) map.setView([coords.lat, coords.lng], map.getZoom() || 15);
+            }, [coords]);
             return null;
         };
 
@@ -227,9 +234,28 @@ function MyBookingsContent() {
                 `}</style>
                 <MapContainer center={[location.lat, location.lng]} zoom={15} className="w-full h-full">
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[location.lat, location.lng]} icon={icon}>
+
+                    {/* User's current device position */}
+                    <Marker position={[location.lat, location.lng]} icon={getIcon('gold')}>
                         <Popup>Your current position</Popup>
                     </Marker>
+
+                    {/* Fleet markers for Admins */}
+                    {isAdmin && bookings
+                        .filter(b => b.status === 'Active' && b.lastLat && b.lastLng)
+                        .map(b => (
+                            <Marker key={b.id} position={[b.lastLat, b.lastLng]} icon={getIcon('blue')}>
+                                <Popup>
+                                    <div className="text-black min-w-[120px]">
+                                        <p className="font-bold border-b pb-1 mb-1">{b.riderName}</p>
+                                        <p className="text-xs text-blue-600 font-bold uppercase">{b.scooter?.name}</p>
+                                        <p className="text-[10px] text-gray-500 italic">Tracking Live</p>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))
+                    }
+
                     <RecenterMap coords={location} />
                 </MapContainer>
             </div>

@@ -17,7 +17,13 @@ export async function PATCH(
             where: { id },
             data: {
                 lastLat: lat,
-                lastLng: lng
+                lastLng: lng,
+                scooter: {
+                    update: {
+                        lastLat: lat,
+                        lastLng: lng
+                    }
+                }
             }
         });
 
