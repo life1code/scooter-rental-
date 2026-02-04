@@ -1,6 +1,7 @@
 "use client";
 
 import { Navbar } from "@/frontend/components/Navbar";
+import { Footer } from "@/frontend/components/Footer";
 import { ScooterCard } from "@/frontend/components/ScooterCard";
 import { SCOOTERS } from "@/backend/data/scooters";
 import { Search, Calendar as CalendarIcon, MapPin, SlidersHorizontal, X, ChevronDown, Bike, Gauge } from "lucide-react";
@@ -397,6 +398,7 @@ export default function Home() {
           scrollbar-width: none;
         }
       `}</style>
+      <Footer />
     </main>
   );
 }
