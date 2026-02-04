@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Quote } from "lucide-react";
 import Link from "next/link";
 
 export function Footer() {
@@ -13,15 +13,19 @@ export function Footer() {
                         <Link href="/" className="block">
                             <img src="/logo.png" alt="Rydex Logo" className="h-12 w-auto object-contain" />
                         </Link>
-                        <p className="text-white/40 text-base leading-relaxed max-w-xl text-justify">
-                            "Welcome to Rydex, your premier destination for freedom on two wheels.
-                            Based in the heart of the Southern Province, we specialize in providing
-                            travelers with high-quality scooters and bikes that are as reliable as they are stylish.
-                            At Ceylon Rider, we believe the best way to see Sri Lanka is with the wind in your hair and
-                            the freedom to stop wherever the view takes your breath away. With our easy-to-use
-                            digital booking system and a commitment to rider safety, we make exploring Paradise simple,
-                            secure, and unforgettable."
-                        </p>
+                        <div className="relative">
+                            <Quote className="w-8 h-8 text-[var(--primary)]/20 absolute -top-6 -left-4 -scale-x-100" />
+                            <p className="text-white/40 text-base leading-relaxed max-w-xl text-justify relative z-10">
+                                Welcome to Rydex, your premier destination for freedom on two wheels.
+                                Based in the heart of the Southern Province, we specialize in providing
+                                travelers with high-quality scooters and bikes that are as reliable as they are stylish.
+                                At Ceylon Rider, we believe the best way to see Sri Lanka is with the wind in your hair and
+                                the freedom to stop wherever the view takes your breath away. With our easy-to-use
+                                digital booking system and a commitment to rider safety, we make exploring Paradise simple,
+                                secure, and unforgettable.
+                            </p>
+                            <Quote className="w-8 h-8 text-[var(--primary)]/20 absolute -bottom-4 right-0" />
+                        </div>
                     </div>
 
                     {/* Contact Info */}
