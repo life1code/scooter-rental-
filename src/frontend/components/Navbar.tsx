@@ -81,13 +81,51 @@ export function Navbar() {
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className="md:hidden glass-card !rounded-none border-x-0 border-b-0 p-4 space-y-4 animate-in slide-in-from-top-4">
-                    <Link href="/" className="block text-lg font-medium">Home</Link>
-                    <Link href="/track" className="block text-lg font-medium">My Bookings</Link>
-                    <Link href="/reviews" className="block text-lg font-medium">Customer Reviews</Link>
-                    <Link href="/policy" className="block text-lg font-medium">Police & Shop Notices</Link>
-                    {isAdmin && (
-                        <Link href="/admin" className="block text-lg font-medium">Admin Dashboard</Link>
+                <div className="md:hidden glass-card !rounded-none border-x-0 border-b-0 p-6 space-y-6 animate-in slide-in-from-top-4">
+                    {session && (
+                        <div className="flex items-center gap-4 pb-4 border-b border-white/5">
+                            <div className="w-12 h-12 rounded-full bg-[var(--muted)] border border-white/10 flex items-center justify-center overflow-hidden">
+                                {session.user?.image ? (
+                                    <img src={session.user.image} alt="User" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="w-6 h-6 text-white/40" />
+                                )}
+                            </div>
+                            <div>
+                                <p className="font-bold">{session.user?.name}</p>
+                                <p className="text-xs text-white/40">{session.user?.email}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        <Link href="/" className="block text-lg font-medium" onClick={() => setIsMenuOpen(false)}>Home</Link>
+                        <Link href="/track" className="block text-lg font-medium" onClick={() => setIsMenuOpen(false)}>My Bookings</Link>
+                        <Link href="/reviews" className="block text-lg font-medium" onClick={() => setIsMenuOpen(false)}>Customer Reviews</Link>
+                        <Link href="/policy" className="block text-lg font-medium" onClick={() => setIsMenuOpen(false)}>Police & Shop Notices</Link>
+                        {isAdmin && (
+                            <Link href="/admin" className="block text-lg font-medium text-[var(--secondary)]" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
+                        )}
+                    </div>
+
+                    {session ? (
+                        <button
+                            onClick={() => {
+                                handleSignOut();
+                                setIsMenuOpen(false);
+                            }}
+                            className="w-full btn-secondary !py-3 flex items-center justify-center gap-2 text-base"
+                        >
+                            <LogOut className="w-5 h-5" /> Sign Out
+                        </button>
+                    ) : (
+                        <Link
+                            href="/auth/signin"
+                            className="block w-full btn-primary !py-3 text-center text-base"
+                            onClick={() => setIsMenuOpen(false)}
+                        >
+                            Sign In
+                        </Link>
                     )}
                 </div>
             )}
