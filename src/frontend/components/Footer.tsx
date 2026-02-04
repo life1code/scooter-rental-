@@ -9,8 +9,8 @@ export function Footer() {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                     {/* Brand & Description */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Link href="/">
+                    <div className="lg:col-span-2 space-y-10">
+                        <Link href="/" className="block">
                             <img src="/logo.png" alt="Rydex Logo" className="h-12 w-auto object-contain" />
                         </Link>
                         <p className="text-white/40 text-base leading-relaxed max-w-xl text-justify">
