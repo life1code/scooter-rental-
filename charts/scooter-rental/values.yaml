@@ -92,3 +92,14 @@ resend:
   # Managed by AWS synced secret
 
 awsRegion: "ap-southeast-2"
+
+backup:
+  enabled: true
+  schedule: "0 2 * * *" # Daily at 2 AM
+  persistence:
+    size: 10Gi
+    storageClass: "gp2" # Or your default storage class
+    accessMode: ReadWriteOnce
+  image:
+    repository: postgres
+    tag: "16-alpine"

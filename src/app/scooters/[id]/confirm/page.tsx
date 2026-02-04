@@ -319,18 +319,27 @@ export default function BookingConfirm() {
             // Save to localStorage for "My Bookings" page
             try {
                 const existingBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
-                // Add new booking to start of list
+
+                // Ensure the saved booking has the full scooter structure for the UI
+                const bookingToSave = {
+                    ...savedBooking,
+                    // If for some reason the API didn't return the full scooter object, reconstruct it
+                    scooter: savedBooking.scooter || {
+                        id: scooter.id,
+                        name: scooter.name,
+                        image: scooter.image,
+                        location: scooter.location,
+                        pricePerDay: scooter.pricePerDay,
+                        ownerName: scooter.ownerName,
+                        ownerWhatsapp: scooter.ownerWhatsapp
+                    }
+                };
+
                 const newBookings = [
-                    {
-                        ...savedBooking,
-                        bike: scooter?.name, // Add bike name explicitly
-                        scooterImage: scooter?.image, // Ensure image is passed for UI
-                        location: scooter?.location || "Unawatuna",
-                        ownerName: scooter?.ownerName || "Ride Owner",
-                        ownerWhatsapp: scooter?.ownerWhatsapp || "+94700000000"
-                    },
+                    bookingToSave,
                     ...existingBookings
-                ];
+                ].slice(0, 10); // Keep only last 10
+
                 safeSaveToLocalStorage("recent_bookings", newBookings);
             } catch (storageError) {
                 console.error("Failed to save to localStorage:", storageError);

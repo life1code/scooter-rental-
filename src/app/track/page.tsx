@@ -97,7 +97,18 @@ function MyBookingsContent() {
                 // Priority 3: Local Storage (Legacy Fallback)
                 const localBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
                 if (localBookings.length > 0) {
-                    setBooking(localBookings[0]);
+                    const latest = localBookings[0];
+                    // Handle legacy flat structure if needed
+                    if (!latest.scooter && latest.scooterImage) {
+                        latest.scooter = {
+                            name: latest.bike,
+                            image: latest.scooterImage,
+                            location: latest.location,
+                            ownerName: latest.ownerName,
+                            ownerWhatsapp: latest.ownerWhatsapp
+                        };
+                    }
+                    setBooking(latest);
                 }
             } catch (error) {
                 console.error("Failed to fetch booking:", error);

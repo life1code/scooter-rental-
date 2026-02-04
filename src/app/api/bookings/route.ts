@@ -110,6 +110,9 @@ export async function POST(request: Request) {
                         totalAmount: Number(body.totalAmount),
                         documents: body.documents || {},
                         status: "Pending"
+                    },
+                    include: {
+                        scooter: true
                     }
                 });
                 break;
