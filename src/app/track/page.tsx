@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/backend/lib/utils";
 
 const TROUBLESHOOT_GUIDES = {
@@ -45,6 +46,7 @@ const TROUBLESHOOT_GUIDES = {
 };
 
 function MyBookingsContent() {
+    const { data: session } = useSession();
     const searchParams = useSearchParams();
     const bookingId = searchParams.get("id");
     const [bookings, setBookings] = useState<any[]>([]);
@@ -91,19 +93,23 @@ function MyBookingsContent() {
                 // Add API bookings first - they are the absolute source of truth
                 apiBookings.forEach((b: any) => mergedMap.set(b.id, b));
 
-                // If API is empty, fallback to local storage (for guests)
-                // If API has data, only add local bookings if they are NOT already there
-                // This ensures we don't show "test" bookings if we have real DB data
-                if (apiBookings.length === 0) {
+                // IF LOGGED IN: We ONLY trust the API. This cleans up deleted bookings.
+                // IF GUEST (Not Logged In): We fallback to local storage for their pending booking.
+                if (!session) {
                     localBookings.forEach((b: any) => {
                         if (!b.scooter && b.scooterImage) {
-                            b.scooter = { name: b.bike, image: b.scooterImage, location: b.location, ownerName: b.ownerName, ownerWhatsapp: b.ownerWhatsapp };
+                            b.scooter = {
+                                name: b.bike,
+                                image: b.scooterImage,
+                                location: b.location,
+                                ownerName: b.ownerName,
+                                ownerWhatsapp: b.ownerWhatsapp
+                            };
                         }
-                        mergedMap.set(b.id, b);
+                        if (!mergedMap.has(b.id)) {
+                            mergedMap.set(b.id, b);
+                        }
                     });
-                } else {
-                    // If we have API data, we strictly follow the DB. 
-                    // We don't add anything extra from local storage to avoid duplicates or ghost data.
                 }
 
                 const finalBookings = Array.from(mergedMap.values()).sort((a: any, b: any) =>
@@ -112,8 +118,9 @@ function MyBookingsContent() {
 
                 setBookings(finalBookings);
 
-                // Update localStorage to match the synchronized state
-                if (apiRes.ok && apiBookings.length > 0) {
+                // Update localStorage to match the synchronized state ONLY if we got a successful API response
+                // This "prunes" the browser cache of any deleted bookings.
+                if (apiRes.ok && session) {
                     localStorage.setItem("recent_bookings", JSON.stringify(finalBookings.slice(0, 10)));
                 }
 

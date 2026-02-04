@@ -192,14 +192,10 @@ export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        // If no session, return all bookings (for local admin access)
         if (!session?.user) {
-            const bookings = await prisma.booking.findMany({
-                include: { scooter: true },
-                orderBy: { createdAt: 'desc' },
-                take: 100
-            });
-            return NextResponse.json(bookings);
+            // Guests shouldn't see all bookings, just return empty list
+            // They rely on localStorage for their specific pending booking
+            return NextResponse.json([]);
         }
 
         const userId = (session.user as any).id;
