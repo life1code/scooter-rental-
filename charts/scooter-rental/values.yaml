@@ -47,6 +47,10 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+    - host: www.ceylonrider.com
+      paths:
+        - path: /
+          pathType: Prefix
     - host: adminer.ceylonrider.com
       paths:
         - path: /
