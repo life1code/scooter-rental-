@@ -203,11 +203,17 @@ export async function GET(request: Request) {
         }
 
         const userId = (session.user as any).id;
+        const userEmail = session.user.email;
         const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
-        const isAdmin = session.user.email && ADMIN_EMAILS.includes(session.user.email);
+        const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail);
 
         const bookings = await prisma.booking.findMany({
-            where: isAdmin ? {} : { userId: userId },
+            where: isAdmin ? {} : {
+                OR: [
+                    { userId: userId },
+                    { riderEmail: userEmail || "" }
+                ]
+            },
             include: { scooter: true },
             orderBy: { createdAt: 'desc' },
             take: 100

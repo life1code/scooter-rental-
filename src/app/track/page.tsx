@@ -78,41 +78,44 @@ function MyBookingsContent() {
         async function fetchBookings() {
             setIsLoading(true);
             try {
-                let allBookings: any[] = [];
-
-                // Priority 1: Fetch all user bookings from API
+                // Priority 1: Fetch from API
                 const apiRes = await fetch('/api/bookings');
-                if (apiRes.ok) {
-                    allBookings = await apiRes.json();
-                }
+                const apiBookings = apiRes.ok ? await apiRes.json() : [];
 
-                // Priority 3: Local Storage (Legacy Fallback)
+                // Priority 2: Local Storage
                 const localBookings = JSON.parse(localStorage.getItem("recent_bookings") || "[]");
 
-                // Merge and deduplicate by ID
+                // Use a Map for deduplication
                 const mergedMap = new Map();
-                allBookings.forEach(b => mergedMap.set(b.id, b));
-                localBookings.forEach((b: any) => {
-                    // Handle legacy flat structure if needed
-                    if (!b.scooter && b.scooterImage) {
-                        b.scooter = {
-                            name: b.bike,
-                            image: b.scooterImage,
-                            location: b.location,
-                            ownerName: b.ownerName,
-                            ownerWhatsapp: b.ownerWhatsapp
-                        };
-                    }
-                    if (!mergedMap.has(b.id)) {
-                        mergedMap.set(b.id, b);
-                    }
-                });
 
-                const finalBookings = Array.from(mergedMap.values()).sort((a, b) =>
-                    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+                // Add API bookings first - they are the absolute source of truth
+                apiBookings.forEach((b: any) => mergedMap.set(b.id, b));
+
+                // If API is empty, fallback to local storage (for guests)
+                // If API has data, only add local bookings if they are NOT already there
+                // This ensures we don't show "test" bookings if we have real DB data
+                if (apiBookings.length === 0) {
+                    localBookings.forEach((b: any) => {
+                        if (!b.scooter && b.scooterImage) {
+                            b.scooter = { name: b.bike, image: b.scooterImage, location: b.location, ownerName: b.ownerName, ownerWhatsapp: b.ownerWhatsapp };
+                        }
+                        mergedMap.set(b.id, b);
+                    });
+                } else {
+                    // If we have API data, we strictly follow the DB. 
+                    // We don't add anything extra from local storage to avoid duplicates or ghost data.
+                }
+
+                const finalBookings = Array.from(mergedMap.values()).sort((a: any, b: any) =>
+                    new Date(b.createdAt || b.startDate || 0).getTime() - new Date(a.createdAt || a.startDate || 0).getTime()
                 );
 
                 setBookings(finalBookings);
+
+                // Update localStorage to match the synchronized state
+                if (apiRes.ok && apiBookings.length > 0) {
+                    localStorage.setItem("recent_bookings", JSON.stringify(finalBookings.slice(0, 10)));
+                }
 
                 // Set initial selection based on URL ID
                 if (bookingId) {
