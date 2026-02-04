@@ -100,6 +100,10 @@ backup:
     size: 10Gi
     storageClass: "gp2" # Or your default storage class
     accessMode: ReadWriteOnce
+  s3:
+    enabled: true
+    bucketName: "scooter-rental-backups-managed-by-aws"
+    region: "ap-southeast-2"
   image:
     repository: postgres
     tag: "16-alpine"

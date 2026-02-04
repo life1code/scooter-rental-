@@ -20,31 +20,48 @@ spec:
           - name: backup
             image: "{{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}"
             imagePullPolicy: IfNotPresent
+            env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: DATABASE_URL
             command:
             - /bin/sh
             - -c
             - |
+              echo "Installing AWS CLI..."
+              apk add --no-cache aws-cli
+              
               echo "Starting database backup..."
-              # Extract host, user, password, dbname from DATABASE_URL
-              # Example: postgresql://USER:PASSWORD@HOST:5432/DBNAME?sslmode=require
+              # Use the DATABASE_URL environment variable mapped from secret
+              DB_URL=$DATABASE_URL
               
-              DB_URL="{{ .Values.database.url }}"
-              
-              # Simple regex to extract components (might need adjustment if URL has special chars)
               DB_USER=$(echo $DB_URL | sed -e 's|postgresql://\([^:]*\):.*|\1|')
               DB_PASS=$(echo $DB_URL | sed -e 's|postgresql://[^:]*:\([^@]*\)@.*|\1|')
               DB_HOST=$(echo $DB_URL | sed -e 's|.*@\([^:]*\):.*|\1|')
               DB_NAME=$(echo $DB_URL | sed -e 's|.*/\([^?]*\).*|\1|')
               
               export PGPASSWORD=$DB_PASS
-              
-              FILENAME="/backups/db-backup-$(date +%Y%m%d-%H%M%S).sql"
+              TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+              FILENAME="/backups/db-backup-$TIMESTAMP.sql"
               
               pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME > $FILENAME
               
               if [ $? -eq 0 ]; then
-                echo "Backup successful: $FILENAME"
-                # Keep only last 7 days of backups
+                echo "Local backup successful: $FILENAME"
+                
+                {{- if .Values.backup.s3.enabled }}
+                echo "Uploading to S3..."
+                aws s3 cp $FILENAME s3://{{ .Values.backup.s3.bucketName }}/$TIMESTAMP-db-backup.sql --region {{ .Values.backup.s3.region }}
+                if [ $? -eq 0 ]; then
+                  echo "S3 upload successful."
+                else
+                  echo "S3 upload failed!"
+                fi
+                {{- end }}
+
+                # Keep only last 7 days of backups locally
                 find /backups -maxdepth 1 -name "db-backup-*.sql" -mtime +7 -delete
               else
                 echo "Backup failed!"
