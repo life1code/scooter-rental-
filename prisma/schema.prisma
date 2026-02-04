@@ -45,6 +45,18 @@ model Scooter {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   bookings        Booking[]
+  blockedDates    BlockedDate[]
+}
+
+model BlockedDate {
+  id        String   @id @default(uuid())
+  scooterId String
+  scooter   Scooter  @relation(fields: [scooterId], references: [id])
+  date      DateTime
+  reason    String?  @default("Admin Blocked")
+  createdAt DateTime @default(now())
+
+  @@unique([scooterId, date])
 }
 
 model Review {

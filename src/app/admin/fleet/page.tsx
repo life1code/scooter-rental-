@@ -14,7 +14,8 @@ import {
     MoreVertical,
     CheckCircle2,
     XCircle,
-    Plus
+    Plus,
+    Calendar
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -180,6 +181,13 @@ export default function FleetManagement() {
                                                     title="Edit"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
+                                                </Link>
+                                                <Link
+                                                    href={`/admin/scooters/${scooter.id}/schedule`}
+                                                    className="p-2 hover:bg-white/10 rounded-lg text-amber-400 transition-colors"
+                                                    title="Manage Schedule"
+                                                >
+                                                    <Calendar className="w-4 h-4" />
                                                 </Link>
                                                 <button
                                                     onClick={() => handleDelete(scooter.id, scooter.name)}

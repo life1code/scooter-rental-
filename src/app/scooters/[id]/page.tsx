@@ -16,6 +16,8 @@ export default function ScooterDetail() {
     const [scooter, setScooter] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedRange, setSelectedRange] = useState<any>();
+    const [disabledDates, setDisabledDates] = useState<Date[]>([]);
+    const [bookedDates, setBookedDates] = useState<Date[]>([]);
 
     useEffect(() => {
         if (!id) return;
@@ -39,6 +41,26 @@ export default function ScooterDetail() {
                         const staticMatch = SCOOTERS.find(s => s.id === id);
                         if (staticMatch) setScooter(staticMatch);
                     }
+                }
+
+                // Fetch schedule/blocked dates
+                const scheduleRes = await fetch(`/api/scooters/${id}/blocked-dates`);
+                if (scheduleRes.ok) {
+                    const data = await scheduleRes.json();
+                    const blocked = data.blockedDates.map((d: string) => new Date(d));
+
+                    const booked: Date[] = [];
+                    data.bookings.forEach((b: any) => {
+                        let current = new Date(b.startDate);
+                        const end = new Date(b.endDate);
+                        while (current <= end) {
+                            booked.push(new Date(current));
+                            current.setDate(current.getDate() + 1);
+                        }
+                    });
+
+                    setDisabledDates(blocked);
+                    setBookedDates(booked);
                 }
             } catch (e) {
                 console.error(e);
@@ -137,7 +159,15 @@ export default function ScooterDetail() {
                                         selected={selectedRange}
                                         onSelect={setSelectedRange}
                                         fromDate={new Date()}
-                                        disabled={{ before: new Date() }}
+                                        disabled={[
+                                            { before: new Date() },
+                                            ...disabledDates,
+                                            ...bookedDates
+                                        ]}
+                                        modifiers={{
+                                            blocked: disabledDates,
+                                            booked: bookedDates
+                                        }}
                                         styles={{
                                             caption: { color: 'white' },
                                             head_cell: { color: 'rgba(255,255,255,0.4)' },
@@ -146,7 +176,9 @@ export default function ScooterDetail() {
                                         }}
                                         modifiersStyles={{
                                             selected: { backgroundColor: 'var(--primary)', color: 'black' },
-                                            today: { border: '2px solid var(--primary)' }
+                                            today: { border: '2px solid var(--primary)' },
+                                            blocked: { opacity: 0.5, textDecoration: 'line-through', color: '#ef4444' },
+                                            booked: { opacity: 0.5, textDecoration: 'line-through', color: '#3b82f6' }
                                         }}
                                     />
                                 </div>
