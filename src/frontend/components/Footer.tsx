@@ -13,14 +13,14 @@ export function Footer() {
                         <Link href="/">
                             <img src="/logo.png" alt="Rydex Logo" className="h-12 w-auto object-contain" />
                         </Link>
-                        <p className="text-white/40 text-sm leading-relaxed max-w-xl">
-                            Welcome to Rydex, your premier destination for freedom on two wheels.
+                        <p className="text-white/40 text-base leading-relaxed max-w-xl text-justify">
+                            "Welcome to Rydex, your premier destination for freedom on two wheels.
                             Based in the heart of the Southern Province, we specialize in providing
                             travelers with high-quality scooters and bikes that are as reliable as they are stylish.
-                            At Rydex, we believe the best way to see Sri Lanka is with the wind in your hair and
+                            At Ceylon Rider, we believe the best way to see Sri Lanka is with the wind in your hair and
                             the freedom to stop wherever the view takes your breath away. With our easy-to-use
                             digital booking system and a commitment to rider safety, we make exploring Paradise simple,
-                            secure, and unforgettable.
+                            secure, and unforgettable."
                         </p>
                     </div>
 
