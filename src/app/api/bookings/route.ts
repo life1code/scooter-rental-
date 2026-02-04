@@ -23,7 +23,26 @@ export async function POST(request: Request) {
         console.log("Received booking request for scooter:", body.scooterId);
 
         // Map userId from session if available
-        const userId = body.userId || (session?.user as any)?.id || null;
+        let userId = body.userId || (session?.user as any)?.id || null;
+
+        console.log("Determined userId:", userId);
+
+        // Safety check: verify user exists if we have an ID
+        if (userId) {
+            try {
+                const userExists = await prisma.user.findUnique({
+                    where: { id: userId }
+                });
+
+                if (!userExists) {
+                    console.warn(`⚠️ User ID ${userId} not found in database. Setting userId to null to avoid FK error.`);
+                    userId = null;
+                }
+            } catch (dbError) {
+                console.error("Error verifying user existence:", dbError);
+                userId = null; // Better safe than failing the booking
+            }
+        }
 
         // Validate required fields
         if (!body.scooterId || !body.riderName || !body.riderPhone || !body.riderPassport) {

@@ -23,20 +23,27 @@ export const authOptions: NextAuthOptions = {
                 // Check if user is an admin based on email
                 const isAdmin = ADMIN_EMAILS.includes(user.email);
 
-                await prisma.user.upsert({
-                    where: { email: user.email },
-                    update: {
-                        name: user.name || undefined,
-                        // Don't downgrade existing admins, but upgrade new matches
-                        ...(isAdmin ? { role: "admin" } : {})
-                    },
-                    create: {
-                        id: user.id,
-                        email: user.email,
-                        name: user.name || null,
-                        role: isAdmin ? "admin" : "user",
-                    },
-                });
+                console.log(`Attempting to upsert user: ${user.email} with ID: ${user.id}`);
+
+                try {
+                    await prisma.user.upsert({
+                        where: { email: user.email },
+                        update: {
+                            name: user.name || undefined,
+                            // Don't downgrade existing admins, but upgrade new matches
+                            ...(isAdmin ? { role: "admin" } : {})
+                        },
+                        create: {
+                            id: user.id,
+                            email: user.email,
+                            name: user.name || null,
+                            role: isAdmin ? "admin" : "user",
+                        },
+                    });
+                    console.log(`Successfully upserted user: ${user.email}`);
+                } catch (error) {
+                    console.error(`Failed to upsert user ${user.email}:`, error);
+                }
             }
             return true;
         },
