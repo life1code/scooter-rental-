@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Rydex - Premium Scooter Rental",
-  description: "Book your favorite scooter with ease. Premium rentals for the modern rider.",
+  description: "Explore the beauty of Southern Sri Lanka with Rydex. Premium, reliable, and affordable scooter rentals in Unawatuna, Galle, and beyond. Book online with live GPS tracking.",
   icons: {
     icon: "/favicon.png",
   },
