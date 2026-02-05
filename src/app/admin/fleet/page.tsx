@@ -15,9 +15,7 @@ import {
     CheckCircle2,
     XCircle,
     Plus,
-    Calendar,
-    ChevronUp,
-    ChevronDown
+    Calendar
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -140,12 +138,11 @@ export default function FleetManagement() {
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Price/Day</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Rating</th>
-                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Move</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {filteredScooters.map((scooter, index) => (
+                                {filteredScooters.map((scooter) => (
                                     <tr key={scooter.id} className="hover:bg-white/[0.02] transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-4">
@@ -167,64 +164,6 @@ export default function FleetManagement() {
                                         <td className="p-4">
                                             <div className="flex items-center gap-1 text-[var(--secondary)] font-bold text-xs">
                                                 ★ {scooter.rating}
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex flex-col gap-1 items-center">
-                                                <button
-                                                    onClick={async () => {
-                                                        if (index === 0) return;
-                                                        const newScooters = [...allScooters];
-                                                        const currentIndex = newScooters.findIndex(s => s.id === scooter.id);
-                                                        if (currentIndex <= 0) return;
-
-                                                        // Swap with previous
-                                                        const temp = newScooters[currentIndex];
-                                                        newScooters[currentIndex] = newScooters[currentIndex - 1];
-                                                        newScooters[currentIndex - 1] = temp;
-
-                                                        // Update order values
-                                                        const orders = newScooters.map((s, i) => ({ id: s.id, order: i }));
-                                                        setAllScooters(newScooters);
-
-                                                        await fetch('/api/scooters/reorder', {
-                                                            method: 'PATCH',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ orders })
-                                                        });
-                                                    }}
-                                                    disabled={index === 0}
-                                                    className="p-1 hover:bg-white/10 rounded disabled:opacity-20 text-white/40 hover:text-white"
-                                                >
-                                                    <ChevronUp className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={async () => {
-                                                        if (index === filteredScooters.length - 1) return;
-                                                        const newScooters = [...allScooters];
-                                                        const currentIndex = newScooters.findIndex(s => s.id === scooter.id);
-                                                        if (currentIndex === -1 || currentIndex >= newScooters.length - 1) return;
-
-                                                        // Swap with next
-                                                        const temp = newScooters[currentIndex];
-                                                        newScooters[currentIndex] = newScooters[currentIndex + 1];
-                                                        newScooters[currentIndex + 1] = temp;
-
-                                                        // Update order values
-                                                        const orders = newScooters.map((s, i) => ({ id: s.id, order: i }));
-                                                        setAllScooters(newScooters);
-
-                                                        await fetch('/api/scooters/reorder', {
-                                                            method: 'PATCH',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ orders })
-                                                        });
-                                                    }}
-                                                    disabled={index === filteredScooters.length - 1}
-                                                    className="p-1 hover:bg-white/10 rounded disabled:opacity-20 text-white/40 hover:text-white"
-                                                >
-                                                    <ChevronDown className="w-4 h-4" />
-                                                </button>
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
