@@ -163,7 +163,6 @@ export default function BookingConfirm() {
         }
     };
 
-    if (!scooter) return <div>Scooter not found</div>;
 
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
         const canvas = canvasRef.current;
