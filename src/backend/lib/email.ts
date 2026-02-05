@@ -60,56 +60,21 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
     }
 
     // Send via Resend API
-    const emailsToSend = [];
-
-    // Always send to the rider
-    emailsToSend.push({
-        from: 'Rydex <info@ceylonrider.com>',
-        to: [booking.riderEmail],
-        subject: subject,
-        html: html,
-        attachments: attachments
+    const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+            from: 'Rydex <info@ceylonrider.com>',
+            to: [booking.riderEmail],
+            subject: subject,
+            html: html,
+            attachments: attachments
+        })
     });
 
-    // If it's a new booking, also notify admins
-    if (type === 'booking') {
-        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
-        emailsToSend.push({
-            from: 'Rydex <info@ceylonrider.com>',
-            to: ADMIN_EMAILS,
-            subject: `NEW BOOKING ALERT: ${booking.rider} - #${booking.id}`,
-            html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                    <h1 style="color: #2dd4bf;">New Booking Received!</h1>
-                    <p>A new booking has been made on the platform.</p>
-                    <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                        <p><strong>Booking ID:</strong> ${booking.id}</p>
-                        <p><strong>Rider:</strong> ${booking.rider}</p>
-                        <p><strong>Email:</strong> ${booking.riderEmail}</p>
-                        <p><strong>Scooter:</strong> ${booking.bike}</p>
-                        <p><strong>Pickup Date:</strong> ${booking.startDate || 'See details'}</p>
-                        <p><strong>Total Amount:</strong> ${booking.amount}</p>
-                    </div>
-                    <p>Please log in to the admin dashboard to review and approve this booking.</p>
-                    <br/>
-                    <a href="https://rydex.ceilao.com/admin" style="background: #2dd4bf; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Dashboard</a>
-                </div>
-            `,
-            attachments: attachments
-        });
-    }
-
-    const results = await Promise.all(emailsToSend.map(email =>
-        fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`
-            },
-            body: JSON.stringify(email)
-        })
-    ));
-
-    const data = await Promise.all(results.map(r => r.json()));
+    const data = await res.json();
     return { success: true, data };
 }
