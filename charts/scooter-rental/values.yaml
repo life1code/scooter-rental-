@@ -102,8 +102,16 @@ backup:
   schedule: "0 2 * * *" # Daily at 2 AM
   persistence:
     size: 10Gi
-    storageClass: "gp2" # Or your default storage class
+    storageClass: "" # Using default storage class for better portability
     accessMode: ReadWriteOnce
+  # Added resource limits for the backup container
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
   s3:
     enabled: true
     bucketName: "scooter-rental-backups-managed-by-aws"

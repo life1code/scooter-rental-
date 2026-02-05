@@ -64,9 +64,10 @@ spec:
                 # Keep only last 7 days of backups locally
                 find /backups -maxdepth 1 -name "db-backup-*.sql" -mtime +7 -delete
               else
-                echo "Backup failed!"
                 exit 1
               fi
+            resources:
+              {{- toYaml .Values.backup.resources | nindent 14 }}
             volumeMounts:
             - name: backup-storage
               mountPath: /backups
