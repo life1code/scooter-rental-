@@ -142,3 +142,5 @@ secretProviderClass:
       objectAlias: AWS_S3_BUCKET_NAME
     - path: AWS_S3_BACKUP_BUCKET_NAME
       objectAlias: AWS_S3_BACKUP_BUCKET_NAME
+    - path: RESEND_API_KEY
+      objectAlias: RESEND_API_KEY
