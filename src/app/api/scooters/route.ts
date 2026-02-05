@@ -13,10 +13,20 @@ export async function GET(request: Request) {
             whereConfig = { isSpotlight: true };
         }
 
-        const scooters = await prisma.scooter.findMany({
-            where: whereConfig,
-            orderBy: { createdAt: 'desc' }
-        });
+        const { dbRequest } = await import("@/backend/lib/rds");
+
+        let query = 'SELECT * FROM "Scooter"';
+        let params: any[] = [];
+
+        if (spotlight) {
+            query += ' WHERE "isSpotlight" = $1';
+            params.push(true);
+        }
+
+        query += ' ORDER BY display_order ASC, "createdAt" DESC';
+
+        const result = await dbRequest(query, params);
+        const scooters = result.rows;
 
         return NextResponse.json(scooters);
     } catch (error) {
