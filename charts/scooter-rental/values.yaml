@@ -102,7 +102,7 @@ backup:
   schedule: "0 2 * * *" # Daily at 2 AM
   persistence:
     size: 10Gi
-    storageClass: "" # Using default storage class for better portability
+    storageClass: "local-path" # Use the cluster's default storage class
     accessMode: ReadWriteOnce
   # Added resource limits for the backup container
   resources:
