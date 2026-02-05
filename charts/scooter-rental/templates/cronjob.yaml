@@ -74,5 +74,5 @@ spec:
           volumes:
           - name: backup-storage
             persistentVolumeClaim:
-              claimName: {{ include "scooter-rental.fullname" . }}-backup
+              claimName: {{ include "scooter-rental.fullname" . }}-backup-v1
 {{- end }}

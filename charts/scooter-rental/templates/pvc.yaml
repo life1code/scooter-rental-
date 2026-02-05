@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "scooter-rental.fullname" . }}-backup
+  name: {{ include "scooter-rental.fullname" . }}-backup-v1
   labels:
     {{- include "scooter-rental.labels" . | nindent 4 }}
 spec:
