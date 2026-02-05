@@ -102,7 +102,7 @@ backup:
   schedule: "0 2 * * *" # Daily at 2 AM
   persistence:
     size: 10Gi
-    storageClass: "gp2" # Or your default storage class
+    storageClass: "local-path" # Or your default storage class
     accessMode: ReadWriteOnce
   s3:
     enabled: true
