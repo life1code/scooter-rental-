@@ -159,6 +159,8 @@ export async function POST(request: Request) {
 
             // Send email with PDF attachment directly via library
             const { sendNotificationEmail } = await import('@/backend/lib/email');
+
+            // 1. Send to Rider
             await sendNotificationEmail({
                 type: 'booking',
                 booking: {
@@ -172,9 +174,26 @@ export async function POST(request: Request) {
                 }
             });
 
-            console.log(`📧 Booking confirmation email sent to ${body.riderEmail}`);
+            // 2. Send to Admin
+            await sendNotificationEmail({
+                type: 'admin_booking',
+                booking: {
+                    id: booking?.id,
+                    rider: body.riderName,
+                    riderEmail: body.riderEmail,
+                    riderPhone: body.riderPhone,
+                    riderPassport: body.riderPassport,
+                    bike: scooter?.name || 'Scooter',
+                    amount: `$${body.totalAmount}`,
+                    startDate: new Date(body.startDate).toLocaleDateString(),
+                    endDate: new Date(body.endDate).toLocaleDateString(),
+                    agreementPdf: agreementPdf
+                }
+            });
+
+            console.log(`📧 Booking confirmation emails sent to rider and admin`);
         } catch (emailError) {
-            console.error('Failed to send booking email:', emailError);
+            console.error('Failed to send booking emails:', emailError);
             // Don't fail the booking if email fails
         }
 

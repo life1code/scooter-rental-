@@ -15,7 +15,10 @@ export async function GET(request: Request) {
 
         const scooters = await prisma.scooter.findMany({
             where: whereConfig,
-            orderBy: { createdAt: 'desc' }
+            orderBy: [
+                { displayOrder: 'asc' },
+                { createdAt: 'desc' }
+            ]
         });
 
         return NextResponse.json(scooters);

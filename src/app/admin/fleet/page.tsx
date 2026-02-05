@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/frontend/components/Navbar";
 import { SCOOTERS } from "@/backend/data/scooters";
@@ -15,7 +15,9 @@ import {
     CheckCircle2,
     XCircle,
     Plus,
-    Calendar
+    Calendar,
+    ChevronUp,
+    ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -86,6 +88,42 @@ export default function FleetManagement() {
         }
     };
 
+    const moveScooter = async (scooterId: string, direction: 'up' | 'down') => {
+        const index = allScooters.findIndex(s => s.id === scooterId);
+        if (index === -1) return;
+
+        const newScooters = [...allScooters];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+        if (targetIndex < 0 || targetIndex >= newScooters.length) return;
+
+        // Swap positions in the full list
+        [newScooters[index], newScooters[targetIndex]] = [newScooters[targetIndex], newScooters[index]];
+
+        // Update local state immediately for snappy UI
+        setAllScooters(newScooters);
+
+        // Prepare orders for backend
+        const orders = newScooters.map((s, i) => ({
+            id: s.id,
+            displayOrder: i
+        }));
+
+        try {
+            const res = await fetch('/api/scooters/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orders })
+            });
+
+            if (!res.ok) {
+                console.error("Failed to save new order to database");
+            }
+        } catch (error) {
+            console.error("Error saving new order:", error);
+        }
+    };
+
     const filteredScooters = allScooters.filter(s =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -134,6 +172,7 @@ export default function FleetManagement() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-white/5 border-b border-white/10">
+                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Order</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Scooter</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Price/Day</th>
@@ -142,64 +181,89 @@ export default function FleetManagement() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {filteredScooters.map((scooter) => (
-                                    <tr key={scooter.id} className="hover:bg-white/[0.02] transition-colors">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
-                                                    <img src={scooter.image} alt="" className="w-full h-full object-cover" />
+                                {filteredScooters.map((scooter) => {
+                                    const originalIndex = allScooters.findIndex(s => s.id === scooter.id);
+                                    const isSearching = searchTerm.trim() !== "";
+
+                                    return (
+                                        <tr key={scooter.id} className="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                                            <td className="p-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <button
+                                                        onClick={() => moveScooter(scooter.id, 'up')}
+                                                        disabled={originalIndex === 0 || isSearching}
+                                                        className="p-1 hover:bg-white/10 rounded disabled:opacity-20 disabled:cursor-not-allowed group transition-all"
+                                                        title={isSearching ? "Reordering disabled during search" : "Move Up"}
+                                                    >
+                                                        <ChevronUp className="w-4 h-4 text-white/40 group-hover:text-[var(--primary)]" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => moveScooter(scooter.id, 'down')}
+                                                        disabled={originalIndex === allScooters.length - 1 || isSearching}
+                                                        className="p-1 hover:bg-white/10 rounded disabled:opacity-20 disabled:cursor-not-allowed group transition-all"
+                                                        title={isSearching ? "Reordering disabled during search" : "Move Down"}
+                                                    >
+                                                        <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-[var(--primary)]" />
+                                                    </button>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold">{scooter.name}</p>
-                                                    <p className="text-[10px] text-white/40 uppercase tracking-widest">{scooter.id}</p>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                                                        <img src={scooter.image} alt="" className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold">{scooter.name}</p>
+                                                        <p className="text-[10px] text-white/40 uppercase tracking-widest">{scooter.id}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className="px-2 py-1 rounded-md bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold uppercase tracking-wider">
-                                                Available
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-sm font-medium">${scooter.pricePerDay}</td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-1 text-[var(--secondary)] font-bold text-xs">
-                                                ★ {scooter.rating}
-                                            </div>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <Link
-                                                    href={`/scooters/${scooter.id}`}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
-                                                    title="View Public Listing"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </Link>
-                                                <Link
-                                                    href={`/admin/scooters/edit/${scooter.id}`}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-blue-400 transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </Link>
-                                                <Link
-                                                    href={`/admin/scooters/${scooter.id}/schedule`}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-amber-400 transition-colors"
-                                                    title="Manage Schedule"
-                                                >
-                                                    <Calendar className="w-4 h-4" />
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(scooter.id, scooter.name)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-red-500 transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="px-2 py-1 rounded-md bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold uppercase tracking-wider">
+                                                    Available
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-sm font-medium">${scooter.pricePerDay}</td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-1 text-[var(--secondary)] font-bold text-xs">
+                                                    ★ {scooter.rating}
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex justify-end gap-1">
+                                                    <Link
+                                                        href={`/scooters/${scooter.id}`}
+                                                        className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
+                                                        title="View Public Listing"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/admin/scooters/edit/${scooter.id}`}
+                                                        className="p-2 hover:bg-white/10 rounded-lg text-blue-400 transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/admin/scooters/${scooter.id}/schedule`}
+                                                        className="p-2 hover:bg-white/10 rounded-lg text-amber-400 transition-colors"
+                                                        title="Manage Schedule"
+                                                    >
+                                                        <Calendar className="w-4 h-4" />
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleDelete(scooter.id, scooter.name)}
+                                                        className="p-2 hover:bg-white/10 rounded-lg text-red-500 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
