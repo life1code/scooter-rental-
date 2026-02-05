@@ -66,8 +66,36 @@ spec:
                   name: {{ include "scooter-rental.fullname" . }}-synced-secrets
                   key: RESEND_API_KEY
                   optional: true
+            - name: AWS_REGION
+              value: {{ .Values.awsRegion | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_S3_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: AWS_S3_BUCKET_NAME
+            - name: AWS_S3_BACKUP_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scooter-rental.fullname" . }}-synced-secrets
+                  key: AWS_S3_BACKUP_BUCKET_NAME
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.secretProviderClass.enabled }}
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -80,6 +108,14 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes: []
+      volumes:
+        {{- if .Values.secretProviderClass.enabled }}
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretProviderClass.name }}
+        {{- end }}
 
 

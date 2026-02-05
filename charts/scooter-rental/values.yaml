@@ -119,3 +119,26 @@ backup:
   image:
     repository: postgres
     tag: "16-alpine"
+
+secretProviderClass:
+  enabled: true
+  name: "scooter-secret-provider-class"
+  provider: "aws"
+  secretName: "scooter-rental-secrets"
+  jmesPath:
+    - path: DATABASE_URL
+      objectAlias: DATABASE_URL
+    - path: GOOGLE_CLIENT_ID
+      objectAlias: GOOGLE_CLIENT_ID
+    - path: GOOGLE_CLIENT_SECRET
+      objectAlias: GOOGLE_CLIENT_SECRET
+    - path: NEXTAUTH_URL
+      objectAlias: NEXTAUTH_URL
+    - path: AWS_ACCESS_KEY_ID
+      objectAlias: AWS_ACCESS_KEY_ID
+    - path: AWS_SECRET_ACCESS_KEY
+      objectAlias: AWS_SECRET_ACCESS_KEY
+    - path: AWS_S3_BUCKET_NAME
+      objectAlias: AWS_S3_BUCKET_NAME
+    - path: AWS_S3_BACKUP_BUCKET_NAME
+      objectAlias: AWS_S3_BACKUP_BUCKET_NAME

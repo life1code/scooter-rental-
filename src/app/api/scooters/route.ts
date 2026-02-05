@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/backend/lib/db";
+import { uploadScooterPhoto } from "@/backend/lib/s3-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,21 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        // Basic validation could go here
+        // Handle image upload to S3 if base64 image is provided
+        let imageUrl = body.image;
+        if (body.image && body.image.startsWith("data:image")) {
+            try {
+                const fileName = `${body.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.jpg`;
+                imageUrl = await uploadScooterPhoto(body.image, fileName);
+                console.log("Image uploaded to S3:", imageUrl);
+            } catch (s3Error: any) {
+                console.error("S3 Upload Failed:", s3Error);
+                return NextResponse.json({
+                    error: "Failed to upload image to S3",
+                    details: s3Error.message
+                }, { status: 500 });
+            }
+        }
 
         const newScooter = await prisma.scooter.create({
             data: {
@@ -37,7 +52,7 @@ export async function POST(request: Request) {
                 model: body.model || "Standard",
                 type: body.type,
                 pricePerDay: body.pricePerDay,
-                image: body.image,
+                image: imageUrl,
                 rating: body.rating || 5.0,
                 description: body.description || "No description provided.",
                 specs: body.specs,

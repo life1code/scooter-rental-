@@ -1,0 +1,78 @@
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const region = process.env.AWS_REGION || "ap-southeast-2";
+const accessKeyId = process.env.AWS_ACCESS_KEY_ID!;
+const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY!;
+const primaryBucketName = process.env.AWS_S3_BUCKET_NAME!;
+const backupBucketName = process.env.AWS_S3_BACKUP_BUCKET_NAME!;
+
+const s3Client = new S3Client({
+    region,
+    credentials: {
+        accessKeyId,
+        secretAccessKey,
+    },
+});
+
+/**
+ * Uploads a file buffer to S3.
+ * @param buffer - File content as buffer
+ * @param key - Destination key in S3
+ * @param contentType - MIME type of the file
+ * @returns - The URL of the uploaded object
+ */
+async function uploadToS3(buffer: Buffer, key: string, contentType: string, bucketName: string): Promise<string> {
+    const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+    });
+
+    await s3Client.send(command);
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+}
+
+/**
+ * Uploads a scooter photo to both primary and backup S3 buckets.
+ * @param imageBase64 - Base64 encoded image string
+ * @param fileName - Target file name
+ * @returns - The URL of the photo in the primary bucket
+ */
+export async function uploadScooterPhoto(imageBase64: string, fileName: string): Promise<string> {
+    // Remove base64 header if present
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Extract content type from base64 string or default to image/jpeg
+    const contentTypeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
+    const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/jpeg';
+
+    const key = `scooters/${Date.now()}_${fileName}`;
+
+    // Upload to primary bucket
+    const primaryUrl = await uploadToS3(buffer, key, contentType, primaryBucketName);
+
+    // Upload to backup bucket asynchronously (best effort)
+    uploadToS3(buffer, key, contentType, backupBucketName).catch(err => {
+        console.error(`Failed to upload backup to S3: ${err.message}`);
+    });
+
+    return primaryUrl;
+}
+/**
+ * Uploads an agreement PDF to the 'pdf' folder in S3.
+ * @param pdfBase64 - Base64 encoded PDF string
+ * @param bookingId - The booking ID to use in the filename
+ * @returns - The URL of the uploaded PDF
+ */
+export async function uploadAgreementPdf(pdfBase64: string, bookingId: string): Promise<string> {
+    const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const key = `pdf/${bookingId}_agreement.pdf`;
+    const contentType = 'application/pdf';
+
+    // Upload to primary bucket
+    return await uploadToS3(buffer, key, contentType, primaryBucketName);
+}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/backend/lib/db";
+import { uploadAgreementPdf } from "@/backend/lib/s3-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -156,6 +157,17 @@ export async function POST(request: Request) {
             };
 
             const agreementPdf = generateAgreementBase64(pdfData);
+
+            // Upload PDF to S3
+            try {
+                const pdfUrl = await uploadAgreementPdf(agreementPdf, booking?.id || 'unknown');
+                console.log(`📄 Agreement PDF uploaded to S3: ${pdfUrl}`);
+
+                // Optionally update booking with PDF URL if schema supports it
+                // await prisma.booking.update({ where: { id: booking.id }, data: { agreementUrl: pdfUrl } });
+            } catch (s3Error) {
+                console.error('Failed to upload PDF to S3:', s3Error);
+            }
 
             // Send email with PDF attachment directly via library
             const { sendNotificationEmail } = await import('@/backend/lib/email');
