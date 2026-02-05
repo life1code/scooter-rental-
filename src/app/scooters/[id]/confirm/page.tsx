@@ -19,6 +19,7 @@ export default function BookingConfirm() {
     const searchParams = useSearchParams();
     const [scooter, setScooter] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [signatureData, setSignatureData] = useState<string | null>(null);
     const { data: session } = useSession();
@@ -257,6 +258,7 @@ export default function BookingConfirm() {
             }
         };
 
+        setIsSubmitting(true);
         try {
             console.log('Submitting booking with data:', bookingData);
 
@@ -330,6 +332,8 @@ export default function BookingConfirm() {
         } catch (error: any) {
             console.error('Booking error:', error);
             showToast(`Failed to create booking: ${error.message || "Unknown error"}`, "error");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -638,10 +642,21 @@ export default function BookingConfirm() {
 
                                 <button
                                     type="submit"
-                                    disabled={isCheckingAvailability || isAvailable === false}
-                                    className="w-full btn-primary !py-4 shadow-[0_0_30px_rgba(45,212,191,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={isCheckingAvailability || isAvailable === false || isSubmitting}
+                                    className="w-full btn-primary !py-4 shadow-[0_0_30px_rgba(45,212,191,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    {isCheckingAvailability ? "Checking..." : isAvailable === false ? "Dates Unavailable" : "Confirm & Request Approval"}
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Processing...</span>
+                                        </>
+                                    ) : isCheckingAvailability ? (
+                                        "Checking..."
+                                    ) : isAvailable === false ? (
+                                        "Dates Unavailable"
+                                    ) : (
+                                        "Confirm & Request Approval"
+                                    )}
                                 </button>
                             </form>
                         </div>
