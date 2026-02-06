@@ -53,6 +53,8 @@ function MyBookingsContent() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [activeGuide, setActiveGuide] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     const booking = bookings[selectedIndex];
 
@@ -137,7 +139,40 @@ function MyBookingsContent() {
         }
 
         fetchBookings();
-    }, [bookingId]);
+    }, [bookingId, session]);
+
+    const handleCancelBooking = async () => {
+        if (!booking || isCancelling) return;
+
+        setIsCancelling(true);
+        try {
+            const res = await fetch(`/api/bookings/${booking.id}/cancel`, {
+                method: 'PATCH',
+            });
+
+            if (res.ok) {
+                // Update local state
+                const updatedBookings = bookings.map(b =>
+                    b.id === booking.id ? { ...b, status: 'Cancelled' } : b
+                );
+                setBookings(updatedBookings);
+                setShowCancelConfirm(false);
+
+                // Update localStorage
+                localStorage.setItem("recent_bookings", JSON.stringify(updatedBookings.slice(0, 10)));
+
+                alert("Booking cancelled successfully.");
+            } else {
+                const data = await res.json();
+                alert(data.error || "Failed to cancel booking");
+            }
+        } catch (error) {
+            console.error("Cancellation error:", error);
+            alert("An error occurred while cancelling your booking.");
+        } finally {
+            setIsCancelling(false);
+        }
+    };
 
     // Geolocation Tracking
     useEffect(() => {
@@ -475,7 +510,58 @@ function MyBookingsContent() {
                                     <span>Chat with Owner</span>
                                 </button>
                             </div>
+
+                            {/* Cancel Booking Section */}
+                            {(booking.status === 'Pending' || booking.status === 'Active') && (
+                                <div className="pt-6 border-t border-white/5">
+                                    <button
+                                        onClick={() => setShowCancelConfirm(true)}
+                                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 !py-4 rounded-2xl flex items-center justify-center gap-3 transition-all font-bold border border-red-500/20"
+                                    >
+                                        <X className="w-5 h-5" />
+                                        <span>Cancel Booking</span>
+                                    </button>
+                                    <p className="text-[10px] text-white/30 text-center mt-3 font-medium uppercase tracking-widest">
+                                        Free cancellation for pending bookings
+                                    </p>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Confirmation Modal for Cancellation */}
+                        {showCancelConfirm && (
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                                <div className="glass-card max-w-sm w-full p-8 space-y-6 relative border-red-500/20 shadow-2xl">
+                                    <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto border border-red-500/20">
+                                        <AlertTriangle className="w-8 h-8 text-red-500" />
+                                    </div>
+
+                                    <div className="text-center space-y-2">
+                                        <h3 className="text-xl font-bold">Cancel Booking?</h3>
+                                        <p className="text-sm text-white/60">
+                                            Are you sure you want to cancel your booking for <span className="text-white font-bold">{booking.scooter?.name}</span>? This action cannot be undone.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <button
+                                            onClick={handleCancelBooking}
+                                            disabled={isCancelling}
+                                            className="w-full bg-red-500 hover:bg-red-600 text-white !py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
+                                        >
+                                            {isCancelling ? "Cancelling..." : "Yes, Cancel Booking"}
+                                        </button>
+                                        <button
+                                            onClick={() => setShowCancelConfirm(false)}
+                                            disabled={isCancelling}
+                                            className="w-full bg-white/5 hover:bg-white/10 text-white !py-4 rounded-2xl font-bold transition-all border border-white/10"
+                                        >
+                                            No, Keep it
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="glass-card p-6 md:p-8 space-y-6 border-orange-500/20 bg-orange-500/5">
                             <div className="flex items-center gap-3">
