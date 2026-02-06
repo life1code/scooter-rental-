@@ -28,6 +28,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { cn } from "@/backend/lib/utils";
 import { generateRentalAgreement } from "@/reportservice/pdf-service";
 import { simulateEmailNotification } from "@/reportservice/email-service";
 import { useToast } from "@/frontend/components/ToastProvider";
@@ -364,8 +365,9 @@ export default function AdminDashboard() {
                                                 <td className="p-4 text-xs text-white/60">{new Date(booking.endDate).toLocaleDateString()}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${booking.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
-                                                        booking.status === 'Active' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
-                                                            'bg-white/10 text-white/60'
+                                                            booking.status === 'Active' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
+                                                                booking.status === 'Cancelled' ? 'bg-red-500/10 text-red-500' :
+                                                                    'bg-white/10 text-white/60'
                                                         }`}>
                                                         {booking.status}
                                                     </span>
@@ -392,6 +394,13 @@ export default function AdminDashboard() {
                                                             title="Mark Completed"
                                                         >
                                                             <CheckCircle2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAction(booking.id, 'Cancelled')}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-red-500 transition-colors"
+                                                            title="Cancel Booking"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -503,9 +512,12 @@ export default function AdminDashboard() {
                             <div className="w-16 h-16 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <AlertTriangle className="w-8 h-8 text-[var(--primary)]" />
                             </div>
-                            <h3 className="text-xl font-bold mb-2">Confirm Action</h3>
+                            <h3 className="text-xl font-bold mb-2">{confirmAction.status === 'Cancelled' ? 'Cancel Booking?' : 'Confirm Action'}</h3>
                             <p className="text-white/60 text-sm mb-8">
-                                Do you approve this booking for ID <span className="text-white font-mono">#{confirmAction.id.slice(0, 6)}</span>?
+                                {confirmAction.status === 'Cancelled'
+                                    ? `Are you sure you want to cancel booking #${confirmAction.id.slice(0, 6)}?`
+                                    : `Do you approve this booking for ID #${confirmAction.id.slice(0, 6)}?`
+                                }
                             </p>
                             <div className="flex gap-4">
                                 <button
@@ -516,9 +528,14 @@ export default function AdminDashboard() {
                                 </button>
                                 <button
                                     onClick={processAction}
-                                    className="flex-1 px-6 py-3 rounded-xl bg-[var(--primary)] text-black font-bold hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] transition-all"
+                                    className={cn(
+                                        "flex-1 px-6 py-3 rounded-xl font-bold transition-all",
+                                        confirmAction.status === 'Cancelled'
+                                            ? "bg-red-500 text-white hover:bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                                            : "bg-[var(--primary)] text-black hover:bg-[var(--primary)]/90 shadow-[0_0_20px_rgba(45,212,191,0.3)]"
+                                    )}
                                 >
-                                    Yes, Approve
+                                    {confirmAction.status === 'Cancelled' ? "Yes, Cancel It" : "Yes, Approve"}
                                 </button>
                             </div>
                         </motion.div>

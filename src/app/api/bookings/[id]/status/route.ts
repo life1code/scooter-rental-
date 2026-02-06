@@ -14,10 +14,12 @@ export async function PATCH(
             return NextResponse.json({ error: "Missing status" }, { status: 400 });
         }
 
-        // If status is 'Active', also verify the customer
+        // If status is 'Active', also verify the customer. If 'Cancelled', reject verification.
         const dataToUpdate: any = { status };
         if (status === 'Active') {
             dataToUpdate.verificationStatus = 'Verified';
+        } else if (status === 'Cancelled') {
+            dataToUpdate.verificationStatus = 'Rejected';
         }
 
         const updatedBooking = await prisma.booking.update({
