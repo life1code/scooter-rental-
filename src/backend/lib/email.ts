@@ -73,7 +73,7 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
 
     // If it's a new booking, also notify admins
     if (type === 'booking') {
-        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com'];
         emailsToSend.push({
             from: 'Rydex <info@ceylonrider.com>',
             to: ADMIN_EMAILS,
