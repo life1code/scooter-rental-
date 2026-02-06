@@ -12,9 +12,9 @@ nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
-  create: true
+  create: false
   annotations: {}
-  name: ""
+  name: "default"
 
 podAnnotations: {}
 
@@ -118,10 +118,10 @@ backup:
     region: "ap-southeast-2"
   image:
     repository: postgres
-    tag: "16-alpine"
+    tag: "17-alpine"
 
 secretProviderClass:
-  enabled: true
+  enabled: false
   name: "scooter-secret-provider-class"
   provider: "aws"
   secretName: "scooter-rental-secrets"

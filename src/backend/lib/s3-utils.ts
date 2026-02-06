@@ -69,7 +69,8 @@ export async function uploadScooterPhoto(imageBase64: string, fileName: string):
  * @returns - The URL of the uploaded PDF
  */
 export async function uploadAgreementPdf(pdfBase64: string, bookingId: string): Promise<string> {
-    const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
+    // More robust base64 stripping (handles variations in jspdf output)
+    const base64Data = pdfBase64.includes(',') ? pdfBase64.split(',')[1] : pdfBase64;
     const buffer = Buffer.from(base64Data, 'base64');
 
     const key = `pdf/${bookingId}_agreement.pdf`;

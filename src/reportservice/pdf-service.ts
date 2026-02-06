@@ -138,5 +138,7 @@ export const generateRentalAgreement = (booking: any) => {
 
 export const generateAgreementBase64 = (booking: any) => {
     const doc = buildAgreementDoc(booking);
-    return doc.output('datauristring');
+    const output = doc.output('datauristring');
+    console.log(`📄 PDF Generated: Length=${output.length}, Prefix=${output.substring(0, 50)}...`);
+    return output;
 };
