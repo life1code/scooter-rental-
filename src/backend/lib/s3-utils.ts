@@ -42,8 +42,8 @@ async function uploadToS3(buffer: Buffer, key: string, contentType: string, buck
  * @returns - The URL of the photo in the primary bucket
  */
 export async function uploadScooterPhoto(imageBase64: string, fileName: string): Promise<string> {
-    // Remove base64 header if present
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    // More robust base64 stripping
+    const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
     const buffer = Buffer.from(base64Data, 'base64');
 
     // Extract content type from base64 string or default to image/jpeg
