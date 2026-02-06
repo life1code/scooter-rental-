@@ -5,11 +5,11 @@ import { prisma } from "@/backend/lib/db";
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
-        const bookingId = params.id;
+        const { id: bookingId } = await params;
 
         // Fetch the booking to verify ownership or admin status
         const booking = await prisma.booking.findUnique({
