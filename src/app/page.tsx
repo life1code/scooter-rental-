@@ -4,7 +4,7 @@ import { Navbar } from "@/frontend/components/Navbar";
 import { Footer } from "@/frontend/components/Footer";
 import { ScooterCard } from "@/frontend/components/ScooterCard";
 import { SCOOTERS } from "@/backend/data/scooters";
-import { Search, Calendar as CalendarIcon, MapPin, SlidersHorizontal, X, ChevronDown, Bike, Gauge } from "lucide-react";
+import { Search, Calendar as CalendarIcon, MapPin, SlidersHorizontal, X, ChevronDown, Bike, Gauge, Tag, Percent, Sparkles } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { DayPicker, DateRange } from "react-day-picker";
@@ -302,8 +302,39 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Special Offers Section */}
+      <section className="max-w-7xl mx-auto px-4 mt-40 md:mt-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="glass-card p-6 border-[var(--primary)]/20 bg-gradient-to-br from-[var(--primary)]/5 to-transparent flex items-center gap-6 group hover:translate-y-[-4px] transition-all duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0 border border-[var(--primary)]/20 shadow-[0_0_20px_rgba(45,212,191,0.1)]">
+              <Sparkles className="w-8 h-8 text-[var(--primary)]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="bg-[var(--primary)] text-black text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Weekly Deal</span>
+                <p className="text-xl font-bold">5% Off</p>
+              </div>
+              <p className="text-sm text-white/50 leading-relaxed font-medium">Rent for <span className="text-white font-bold">7+ days</span> and save automatically.</p>
+            </div>
+          </div>
+
+          <div className="glass-card p-6 border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent flex items-center gap-6 group hover:translate-y-[-4px] transition-all duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+              <Tag className="w-8 h-8 text-purple-500" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="bg-purple-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Monthly Saver</span>
+                <p className="text-xl font-bold">12% Off</p>
+              </div>
+              <p className="text-sm text-white/50 leading-relaxed font-medium">Rent for <span className="text-white font-bold">30+ days</span> for our best long-term rate.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content */}
-      <section ref={resultsRef} className="max-w-7xl mx-auto px-4 mt-48 md:mt-24 space-y-12">
+      <section ref={resultsRef} className="max-w-7xl mx-auto px-4 mt-12 md:mt-24 space-y-12">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold">Available <span className="text-[var(--primary)]">rides</span></h2>
