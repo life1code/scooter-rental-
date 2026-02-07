@@ -11,13 +11,23 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  role      String   @default("user") // "admin" or "user"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  bookings  Booking[]
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String?
+  role              String    @default("user") // "user", "host", "superadmin"
+  approvalStatus    String    @default("approved") // "pending", "approved", "rejected"
+  
+  // Host specific fields
+  institutionName    String?
+  institutionAddress String?
+  nicNumber          String?
+  nicPhoto           String?
+  phoneNumber        String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  bookings          Booking[]
+  scooters          Scooter[]
 }
 
 model Scooter {
@@ -45,6 +55,10 @@ model Scooter {
   // Live GPS tracking
   lastLat         Float?
   lastLng         Float?
+
+  // Relation to Host
+  hostId          String?
+  host            User?    @relation(fields: [hostId], references: [id])
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

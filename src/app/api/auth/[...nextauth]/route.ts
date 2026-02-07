@@ -13,43 +13,76 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async signIn({ user, account, profile }) {
-            // Define allowed admin emails
-            const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
+            const SUPER_ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
 
-            // Auto-create user in database if they don't exist
             if (account?.provider === "google" && user.email) {
                 const { prisma } = await import("@/backend/lib/db");
 
-                // Check if user is an admin based on email
-                const isAdmin = ADMIN_EMAILS.includes(user.email);
+                // Get user from DB
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: user.email }
+                });
 
-                console.log(`Attempting to upsert user: ${user.email} with ID: ${user.id}`);
+                const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email);
 
-                try {
-                    await prisma.user.upsert({
-                        where: { email: user.email },
-                        update: {
-                            name: user.name || undefined,
-                            // Don't downgrade existing admins, but upgrade new matches
-                            ...(isAdmin ? { role: "admin" } : {})
-                        },
-                        create: {
+                // If specialized super admin email but doesn't exist in DB yet
+                if (isSuperAdmin && !dbUser) {
+                    await prisma.user.create({
+                        data: {
                             id: user.id,
                             email: user.email,
                             name: user.name || null,
-                            role: isAdmin ? "admin" : "user",
-                        },
+                            role: "superadmin",
+                            approvalStatus: "approved"
+                        }
                     });
-                    console.log(`Successfully upserted user: ${user.email}`);
-                } catch (error) {
-                    console.error(`Failed to upsert user ${user.email}:`, error);
+                    return true;
                 }
+
+                // If user doesn't exist at all, create as standard user
+                if (!dbUser) {
+                    await prisma.user.create({
+                        data: {
+                            id: user.id,
+                            email: user.email,
+                            name: user.name || null,
+                            role: "user",
+                            approvalStatus: "approved"
+                        }
+                    });
+                    return true;
+                }
+
+                // If user is a host, check approval status
+                if (dbUser.role === "host" && dbUser.approvalStatus !== "approved") {
+                    throw new Error("Your host account is pending approval by a super admin.");
+                }
+
+                // Auto-upgrade super admins if email matches but role isn't set
+                if (isSuperAdmin && dbUser.role !== "superadmin") {
+                    await prisma.user.update({
+                        where: { email: user.email },
+                        data: { role: "superadmin" }
+                    });
+                }
+
+                return true;
             }
             return true;
         },
         async session({ session, token }) {
             if (session.user) {
-                (session.user as any).id = token.sub;
+                const { prisma } = await import("@/backend/lib/db");
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: session.user.email! },
+                    select: { id: true, role: true, institutionName: true }
+                });
+
+                if (dbUser) {
+                    (session.user as any).id = dbUser.id;
+                    (session.user as any).role = dbUser.role;
+                    (session.user as any).institutionName = dbUser.institutionName;
+                }
             }
             return session;
         },

@@ -3,7 +3,7 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Chrome, ShieldCheck } from "lucide-react";
+import { Chrome, ShieldCheck, Building2 } from "lucide-react";
 import Link from "next/link";
 
 export default function SignIn() {
@@ -45,14 +45,21 @@ export default function SignIn() {
                         Continue with Google
                     </button>
 
-                    <div className="pt-4 border-t border-white/5">
-                        <p className="text-[10px] text-white/20 uppercase font-bold mb-3 tracking-widest">Business Administration</p>
+                    <div className="pt-4 border-t border-white/5 space-y-3">
+                        <p className="text-[10px] text-white/20 uppercase font-bold mb-1 tracking-widest">Business Administration</p>
                         <Link
                             href="/admin/login"
                             className="w-full py-4 rounded-2xl border border-white/10 text-white/60 text-xs font-bold hover:bg-white/5 hover:text-white transition-all uppercase tracking-widest flex items-center justify-center gap-2"
                         >
                             <ShieldCheck className="w-4 h-4" />
                             Host Account Login
+                        </Link>
+                        <Link
+                            href="/auth/signup-host"
+                            className="w-full py-4 rounded-2xl border border-[var(--primary)]/20 text-[var(--primary)] text-xs font-bold hover:bg-[var(--primary)]/5 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                        >
+                            <Building2 className="w-4 h-4" />
+                            Create Host Account
                         </Link>
                     </div>
                 </div>

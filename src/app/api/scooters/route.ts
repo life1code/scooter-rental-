@@ -2,20 +2,40 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/backend/lib/db";
 import { uploadScooterPhoto } from "@/backend/lib/s3-utils";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url, "http://localhost");
         const spotlight = searchParams.get('spotlight') === 'true';
+        const session = await getServerSession(authOptions);
 
-        let whereConfig = {};
+        let whereConfig: any = {};
+
         if (spotlight) {
-            whereConfig = { isSpotlight: true };
+            whereConfig.isSpotlight = true;
+        }
+
+        const userRole = (session?.user as any)?.role;
+        const userId = (session?.user as any)?.id;
+
+        // If it's a host viewing, they only see their own scooters
+        if (userRole === "host") {
+            whereConfig.hostId = userId;
         }
 
         const scooters = await prisma.scooter.findMany({
             where: whereConfig,
+            include: {
+                host: {
+                    select: {
+                        institutionName: true
+                    }
+                }
+            },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -46,6 +66,9 @@ export async function POST(request: Request) {
             }
         }
 
+        const session = await getServerSession(authOptions);
+        const hostId = (session?.user as any)?.id;
+
         const newScooter = await prisma.scooter.create({
             data: {
                 name: body.name,
@@ -61,7 +84,8 @@ export async function POST(request: Request) {
                 location: body.location,
                 ownerName: body.ownerName,
                 ownerWhatsapp: body.ownerWhatsapp,
-                status: body.status || "Available"
+                status: body.status || "Available",
+                hostId: hostId // Link to current host
             }
         });
 

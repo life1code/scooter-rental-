@@ -205,24 +205,48 @@ export async function GET(request: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user) {
-            // Guests shouldn't see all bookings, just return empty list
-            // They rely on localStorage for their specific pending booking
             return NextResponse.json([]);
         }
 
         const userId = (session.user as any).id;
+        const userRole = (session.user as any).role;
         const userEmail = session.user.email;
-        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
-        const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail);
 
-        const bookings = await prisma.booking.findMany({
-            where: isAdmin ? {} : {
+        let whereConfig = {};
+
+        if (userRole === "superadmin") {
+            // Super admins see everything
+            whereConfig = {};
+        } else if (userRole === "host") {
+            // Hosts see bookings for their scooters
+            whereConfig = {
+                scooter: {
+                    hostId: userId
+                }
+            };
+        } else {
+            // Regular users see their own bookings
+            whereConfig = {
                 OR: [
                     { userId: userId },
                     { riderEmail: userEmail || "" }
                 ]
+            };
+        }
+
+        const bookings = await prisma.booking.findMany({
+            where: whereConfig,
+            include: {
+                scooter: {
+                    include: {
+                        host: {
+                            select: {
+                                institutionName: true
+                            }
+                        }
+                    }
+                }
             },
-            include: { scooter: true },
             orderBy: { createdAt: 'desc' },
             take: 100
         });

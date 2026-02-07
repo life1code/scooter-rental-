@@ -45,9 +45,10 @@ export default function CustomerManagement() {
             const sessionRes = await fetch('/api/auth/session');
             const session = await sessionRes.json();
 
-            const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+            const userRole = (session?.user as any)?.role;
+            const hasAccess = userRole === "admin" || userRole === "host" || userRole === "superadmin";
 
-            if (!isAdmin) {
+            if (!hasAccess) {
                 router.push("/admin/login");
                 return;
             }

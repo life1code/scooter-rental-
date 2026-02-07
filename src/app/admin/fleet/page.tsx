@@ -30,11 +30,15 @@ export default function FleetManagement() {
     // Auth check
     useEffect(() => {
         if (status === "loading") return;
-        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
-        const isGoogleAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
-        if (status === "unauthenticated" || !isGoogleAdmin) {
+        if (status === "unauthenticated") {
             router.push("/admin/login");
+            return;
+        }
+
+        const userRole = (session?.user as any)?.role;
+        if (userRole !== "admin" && userRole !== "host" && userRole !== "superadmin") {
+            router.push("/");
         }
     }, [status, session, router]);
 

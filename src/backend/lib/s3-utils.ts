@@ -79,3 +79,22 @@ export async function uploadAgreementPdf(pdfBase64: string, bookingId: string): 
     // Upload to primary bucket
     return await uploadToS3(buffer, key, contentType, primaryBucketName);
 }
+/**
+ * Uploads a host-related document (like NIC photo) to the 'hosts' folder in S3.
+ * @param base64DataString - Base64 encoded file string
+ * @param fileName - Target file name
+ * @returns - The URL of the uploaded document
+ */
+export async function uploadHostDocument(base64DataString: string, fileName: string): Promise<string> {
+    const base64Data = base64DataString.includes(',') ? base64DataString.split(',')[1] : base64DataString;
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Extract content type
+    const contentTypeMatch = base64DataString.match(/^data:(image\/\w+);base64,/);
+    const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/jpeg';
+
+    const key = `hosts/${Date.now()}_${fileName}`;
+
+    // Upload to primary bucket
+    return await uploadToS3(buffer, key, contentType, primaryBucketName);
+}
