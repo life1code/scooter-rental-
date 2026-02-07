@@ -27,28 +27,35 @@ export default function Home() {
   const locations = ["Unawatuna", "Weligama", "Mirissa", "Ahangama"];
 
   // Load scooters from Database via API
+  // Load scooters from Database via API
   useEffect(() => {
-    async function loadData() {
+    async function loadScooters() {
       try {
-        const [scootersRes, bookingsRes] = await Promise.all([
-          fetch('/api/scooters'),
-          fetch('/api/bookings')
-        ]);
-
-        if (scootersRes.ok) {
-          const scootersData = await scootersRes.json();
-          setAllScooters(scootersData);
-        }
-
-        if (bookingsRes.ok) {
-          const bookingsData = await bookingsRes.json();
-          setAllBookings(bookingsData);
+        const res = await fetch('/api/scooters');
+        if (res.ok) {
+          const data = await res.json();
+          setAllScooters(data);
         }
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error("Failed to load scooters:", error);
       }
     }
-    loadData();
+
+    async function loadBookings() {
+      try {
+        const res = await fetch('/api/bookings');
+        if (res.ok) {
+          const data = await res.json();
+          setAllBookings(data);
+        }
+      } catch (error) {
+        console.error("Failed to load bookings:", error);
+      }
+    }
+
+    // Load independently to show scooters faster
+    loadScooters();
+    loadBookings();
   }, []);
 
   // Extract unique models for the dropdown
