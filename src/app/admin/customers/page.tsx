@@ -35,8 +35,6 @@ export default function CustomerManagement() {
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
 
-    // Define allowed admin emails
-    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
 
     // Initial check for admin session
     useEffect(() => {

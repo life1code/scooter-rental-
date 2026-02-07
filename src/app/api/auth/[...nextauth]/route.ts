@@ -53,10 +53,10 @@ export const authOptions: NextAuthOptions = {
                     return true;
                 }
 
-                // If user is a host, check approval status
-                if (dbUser.role === "host" && dbUser.approvalStatus !== "approved") {
-                    throw new Error("Your host account is pending approval by a super admin.");
-                }
+                // If user is a host, check approval status but allow login (we will handle restriction in UI)
+                // if (dbUser.role === "host" && dbUser.approvalStatus !== "approved") {
+                //      throw new Error("Your host account is pending approval by a super admin.");
+                // }
 
                 // Auto-upgrade super admins if email matches but role isn't set
                 if (isSuperAdmin && dbUser.role !== "superadmin") {
@@ -81,6 +81,7 @@ export const authOptions: NextAuthOptions = {
                 if (dbUser) {
                     (session.user as any).id = dbUser.id;
                     (session.user as any).role = dbUser.role;
+                    (session.user as any).approvalStatus = (dbUser as any).approvalStatus;
                     (session.user as any).institutionName = dbUser.institutionName;
                 }
             }

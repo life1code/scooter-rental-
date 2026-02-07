@@ -49,7 +49,7 @@ export default function FleetManagement() {
 
             try {
                 setIsLoading(true);
-                const res = await fetch('/api/scooters');
+                const res = await fetch('/api/scooters?admin=true');
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.length > 0) {

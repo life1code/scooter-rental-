@@ -10,9 +10,8 @@ export function Navbar() {
     const { data: session } = useSession();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Define allowed admin emails
-    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const userRole = (session?.user as any)?.role;
+    const isAdmin = userRole === "admin" || userRole === "host" || userRole === "superadmin";
 
     const handleSignOut = () => {
         signOut({ callbackUrl: '/' });

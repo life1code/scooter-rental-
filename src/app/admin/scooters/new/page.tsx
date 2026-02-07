@@ -38,6 +38,13 @@ export default function AddScooter() {
         const userRole = (session?.user as any)?.role;
         if (userRole !== "admin" && userRole !== "host" && userRole !== "superadmin") {
             router.push("/");
+            return;
+        }
+
+        const approvalStatus = (session?.user as any)?.approvalStatus;
+        if (userRole === "host" && approvalStatus !== "approved") {
+            router.push("/admin");
+            return;
         }
     }, [status, session, router]);
 

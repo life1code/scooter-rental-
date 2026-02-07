@@ -129,11 +129,11 @@ export default function AdminDashboard() {
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
     const [confirmAction, setConfirmAction] = useState<{ id: string, status: string } | null>(null);
 
-    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
     const [pendingHosts, setPendingHosts] = useState<any[]>([]);
     const [view, setView] = useState<'overview' | 'hosts'>('overview');
 
     const userRole = (session?.user as any)?.role;
+    const approvalStatus = (session?.user as any)?.approvalStatus;
     const isSuperAdmin = userRole === "superadmin";
 
     useEffect(() => {
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
 
     const fetchScooters = async () => {
         try {
-            const res = await fetch('/api/scooters');
+            const res = await fetch('/api/scooters?admin=true');
             if (res.ok) {
                 const data = await res.json();
                 setScooters(data);
@@ -347,7 +347,33 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {view === 'hosts' && isSuperAdmin ? (
+                {userRole === 'host' && approvalStatus === 'pending' ? (
+                    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-[var(--secondary)]/10 rounded-full flex items-center justify-center mb-4">
+                            <Clock className="w-12 h-12 text-[var(--secondary)]" />
+                        </div>
+                        <h2 className="text-3xl font-bold">Account Pending Approval</h2>
+                        <p className="text-white/60 max-w-md text-lg">
+                            Your host account is currently under review by our Super Admin team. 
+                            You will receive an email once your account is verified and approved.
+                        </p>
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10 max-w-sm w-full">
+                            <p className="text-sm font-bold text-white/40 uppercase tracking-widest mb-1">Status</p>
+                            <div className="flex items-center justify-center gap-2 text-[var(--secondary)] font-bold">
+                                <span className="w-2 h-2 bg-[var(--secondary)] rounded-full animate-pulse"></span>
+                                Awaiting Verification
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="btn-secondary mt-4"
+                        >
+                            Check Status Again
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {view === 'hosts' && isSuperAdmin ? (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-2xl font-bold flex items-center gap-3">
@@ -729,6 +755,8 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                     </div>
+                )}
+                    </>
                 )}
             </div>
         </main>

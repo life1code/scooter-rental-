@@ -11,13 +11,15 @@ export default function AdminLogin() {
     const router = useRouter();
     const { showToast } = useToast();
 
-    const ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
 
     useEffect(() => {
         if (status === "loading") return;
 
-        if (status === "authenticated" && session?.user?.email) {
-            if (ADMIN_EMAILS.includes(session.user.email)) {
+        if (status === "authenticated" && session?.user) {
+            const userRole = (session.user as any)?.role;
+            const hasAccess = userRole === "admin" || userRole === "host" || userRole === "superadmin";
+
+            if (hasAccess) {
                 // Authorized: Go to Dashboard
                 router.push("/admin");
             } else {
@@ -33,7 +35,10 @@ export default function AdminLogin() {
     };
 
     // Show loading state while checking
-    if (status === "authenticated" && session?.user?.email && !ADMIN_EMAILS.includes(session.user.email)) {
+    const userRole = (session?.user as any)?.role;
+    const hasAccess = userRole === "admin" || userRole === "host" || userRole === "superadmin";
+
+    if (status === "authenticated" && session?.user && !hasAccess) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--primary)]"></div>

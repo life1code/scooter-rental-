@@ -19,11 +19,20 @@ export async function GET(request: Request) {
             whereConfig.isSpotlight = true;
         }
 
+        // Only show approved hosts' scooters or system scooters (hostId: null)
+        if (!isAdminView) {
+            whereConfig.OR = [
+                { hostId: null },
+                { host: { approvalStatus: 'approved' } }
+            ];
+        }
+
+        const isAdminView = searchParams.get('admin') === 'true';
         const userRole = (session?.user as any)?.role;
         const userId = (session?.user as any)?.id;
 
-        // If it's a host viewing, they only see their own scooters
-        if (userRole === "host") {
+        // If it's a host viewing their admin dashboard, filter by their hostId
+        if (isAdminView && userRole === "host") {
             whereConfig.hostId = userId;
         }
 
@@ -68,6 +77,16 @@ export async function POST(request: Request) {
 
         const session = await getServerSession(authOptions);
         const hostId = (session?.user as any)?.id;
+        const userRole = (session?.user as any)?.role;
+        const approvalStatus = (session?.user as any)?.approvalStatus;
+
+        // Security check: Only approved hosts or superadmins can create scooters
+        if (userRole === 'host' && approvalStatus !== 'approved') {
+            return NextResponse.json({ 
+                error: "Host account not approved", 
+                details: "You must come from an approved host account to list scooters." 
+            }, { status: 403 });
+        }
 
         const newScooter = await prisma.scooter.create({
             data: {
