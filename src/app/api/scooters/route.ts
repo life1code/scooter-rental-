@@ -19,6 +19,8 @@ export async function GET(request: Request) {
             whereConfig.isSpotlight = true;
         }
 
+        const isAdminView = searchParams.get('admin') === 'true';
+
         // Only show approved hosts' scooters or system scooters (hostId: null)
         if (!isAdminView) {
             whereConfig.OR = [
@@ -26,8 +28,6 @@ export async function GET(request: Request) {
                 { host: { approvalStatus: 'approved' } }
             ];
         }
-
-        const isAdminView = searchParams.get('admin') === 'true';
         const userRole = (session?.user as any)?.role;
         const userId = (session?.user as any)?.id;
 
