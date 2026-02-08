@@ -3,12 +3,12 @@
  * This service is intended to be called from server-side components or API routes.
  */
 
-export const sendEmailNotification = async (type: 'booking' | 'approval', booking: any) => {
+export const sendEmailNotification = async (type: 'booking' | 'approval' | 'host_registration' | 'host_approval', data: { booking?: any, host?: any }) => {
     try {
         const response = await fetch('/api/email/notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, booking })
+            body: JSON.stringify({ type, ...data })
         });
 
         if (!response.ok) {
@@ -28,8 +28,12 @@ export const sendEmailNotification = async (type: 'booking' | 'approval', bookin
 /**
  * Legacy simulator - kept for compatibility during transition
  */
-export const simulateEmailNotification = (type: 'booking' | 'approval', booking: any) => {
-    console.log(`[SIMULATOR] ${type} email for ${booking.id}`);
+export const simulateEmailNotification = (type: 'booking' | 'approval' | 'host_registration' | 'host_approval', data: any) => {
+    console.log(`[SIMULATOR] ${type} email for ${data.id || data.email}`);
     // Real call
-    sendEmailNotification(type, booking);
+    if (type === 'host_registration' || type === 'host_approval') {
+        sendEmailNotification(type, { host: data });
+    } else {
+        sendEmailNotification(type, { booking: data });
+    }
 };

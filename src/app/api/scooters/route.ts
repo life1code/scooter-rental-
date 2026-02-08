@@ -31,9 +31,17 @@ export async function GET(request: Request) {
         const userRole = (session?.user as any)?.role;
         const userId = (session?.user as any)?.id;
 
-        // If it's a host viewing their admin dashboard, filter by their hostId
-        if (isAdminView && userRole === "host") {
-            whereConfig.hostId = userId;
+        // If it's a host viewing their admin dashboard, filter by their HostProfile ID
+        if (isAdminView && userRole === "host" && userId) {
+            const profile = await prisma.hostProfile.findUnique({
+                where: { userId: userId }
+            });
+            if (profile) {
+                whereConfig.hostId = profile.id;
+            } else {
+                // If no profile, they shouldn't see any host-specific scooters
+                whereConfig.hostId = 'none';
+            }
         }
 
         const scooters = await prisma.scooter.findMany({
@@ -82,10 +90,18 @@ export async function POST(request: Request) {
 
         // Security check: Only approved hosts or superadmins can create scooters
         if (userRole === 'host' && approvalStatus !== 'approved') {
-            return NextResponse.json({ 
-                error: "Host account not approved", 
-                details: "You must come from an approved host account to list scooters." 
+            return NextResponse.json({
+                error: "Host account not approved",
+                details: "You must come from an approved host account to list scooters."
             }, { status: 403 });
+        }
+
+        const profile = await prisma.hostProfile.findUnique({
+            where: { userId: hostId }
+        });
+
+        if (!profile) {
+            return NextResponse.json({ error: "Host profile not found" }, { status: 404 });
         }
 
         const newScooter = await prisma.scooter.create({
@@ -104,7 +120,7 @@ export async function POST(request: Request) {
                 ownerName: body.ownerName,
                 ownerWhatsapp: body.ownerWhatsapp,
                 status: body.status || "Available",
-                hostId: hostId // Link to current host
+                hostId: profile.id // Link to HostProfile ID
             }
         });
 

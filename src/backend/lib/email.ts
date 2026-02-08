@@ -1,4 +1,4 @@
-export async function sendNotificationEmail({ type, booking }: { type: 'booking' | 'approval', booking: any }) {
+export async function sendNotificationEmail({ type, booking, host }: { type: 'booking' | 'approval' | 'host_registration' | 'host_approval' | 'host_rejection', booking?: any, host?: any }) {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
     if (!RESEND_API_KEY || RESEND_API_KEY === 're_123456789') {
@@ -6,15 +6,15 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
         return { success: true, message: "Simulated (API Key missing)" };
     }
 
-    if (!booking.riderEmail) {
-        throw new Error("No rider email provided");
-    }
-
+    const SUPER_ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
     let subject = "";
     let html = "";
     let attachments: any[] = [];
+    let toEmails: string[] = [];
 
     if (type === 'booking') {
+        if (!booking?.riderEmail) throw new Error("No rider email provided");
+        toEmails = [booking.riderEmail];
         subject = `Rental Agreement - Booking #${booking.id}`;
         html = `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -34,7 +34,6 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
             </div>
         `;
 
-        // Add PDF attachment if provided
         if (booking.agreementPdf) {
             const base64Content = booking.agreementPdf.split(',')[1];
             attachments.push({
@@ -43,6 +42,8 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
             });
         }
     } else if (type === 'approval') {
+        if (!booking?.riderEmail) throw new Error("No rider email provided");
+        toEmails = [booking.riderEmail];
         subject = `Booking Approved - Ready to Ride! #${booking.id}`;
         html = `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -57,26 +58,80 @@ export async function sendNotificationEmail({ type, booking }: { type: 'booking'
                 <p>The Rydex Team</p>
             </div>
         `;
+    } else if (type === 'host_registration') {
+        if (!host?.email) throw new Error("No host email provided");
+        toEmails = SUPER_ADMIN_EMAILS;
+        subject = `NEW HOST APPLICATION: ${host.institutionName}`;
+        html = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <h1 style="color: #2dd4bf;">New Host Application!</h1>
+                <p>A new institution has applied to become a host on the Rydex platform.</p>
+                <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <p><strong>Institution:</strong> ${host.institutionName}</p>
+                    <p><strong>Host Name:</strong> ${host.name}</p>
+                    <p><strong>Email:</strong> ${host.email}</p>
+                    <p><strong>NIC:</strong> ${host.nicNumber}</p>
+                </div>
+                <p>Please log in to the Super Admin dashboard to review and approve this application.</p>
+                <br/>
+                <a href="https://rydex.ceilao.com/admin" style="background: #2dd4bf; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Application</a>
+            </div>
+        `;
+    } else if (type === 'host_approval') {
+        if (!host?.email) throw new Error("No host email provided");
+        toEmails = [host.email];
+        subject = `Host Account Approved - Welcome to Rydex!`;
+        html = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <h1 style="color: #2dd4bf;">Welcome Aboard!</h1>
+                <p>Hi ${host.name},</p>
+                <p>Congratulations! Your host application for <strong>${host.institutionName}</strong> has been approved by our team.</p>
+                <p>You can now log in to your Host Dashboard to start listing your scooters and managing rentals.</p>
+                <div style="margin: 30px 0;">
+                    <a href="https://rydex.ceilao.com/admin/login" style="background: #2dd4bf; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Go to Host Dashboard</a>
+                </div>
+                <p>If you have any questions, feel free to reply to this email.</p>
+                <p>Let's grow together!</p>
+                <p>The Rydex Team</p>
+            </div>
+        `;
+    } else if (type === 'host_rejection') {
+        if (!host?.email) throw new Error("No host email provided");
+        toEmails = [host.email];
+        subject = `Update on your Rydex Host Application`;
+        html = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <h1 style="color: #ef4444;">Application Update</h1>
+                <p>Hi ${host.name},</p>
+                <p>Thank you for your interest in becoming a host for <strong>${host.institutionName}</strong> on Rydex.</p>
+                <p>After reviewing your application, we regret to inform you that we cannot approve your host account at this time.</p>
+                <div style="background: #fff5f5; border: 1px solid #fed7d7; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <p>Common reasons for rejection include incomplete documentation or verification issues.</p>
+                </div>
+                <p>If you believe this was an error or would like to provide more information, please feel free to reach out to us by replying to this email.</p>
+                <p>Best regards,</p>
+                <p>The Rydex Team</p>
+            </div>
+        `;
     }
 
-    // Send via Resend API
+    // Prepare combined email list
     const emailsToSend = [];
 
-    // Always send to the rider
+    // Main notification (to rider or super admin or host)
     emailsToSend.push({
         from: 'Rydex <info@ceylonrider.com>',
-        to: [booking.riderEmail],
+        to: toEmails,
         subject: subject,
         html: html,
         attachments: attachments
     });
 
-    // If it's a new booking, also notify admins
+    // If it's a new booking, also notify admins (extra notification)
     if (type === 'booking') {
-        const ADMIN_EMAILS = ['rydexpvtltd@gmail.com'];
         emailsToSend.push({
             from: 'Rydex <info@ceylonrider.com>',
-            to: ADMIN_EMAILS,
+            to: SUPER_ADMIN_EMAILS[0],
             subject: `NEW BOOKING ALERT: ${booking.rider} - #${booking.id}`,
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,116 +8,117 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  name              String?
-  role              String    @default("user") // "user", "host", "superadmin"
-  approvalStatus    String    @default("approved") // "pending", "approved", "rejected"
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  role          String    @default("user")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   
-  // Host specific fields
-  institutionName    String?
-  institutionAddress String?
-  nicNumber          String?
-  nicPhoto           String?
-  phoneNumber        String?
+  // Profiles
+  hostProfile   HostProfile?
+  adminProfile  AdminProfile?
 
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  bookings          Booking[]
-  scooters          Scooter[]
+  bookings      Booking[]
+}
+
+model HostProfile {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  institutionName    String
+  institutionAddress String
+  nicNumber          String
+  nicPhoto           String
+  phoneNumber        String
+  approvalStatus     String    @default("pending")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user               User      @relation(fields: [userId], references: [id])
+  scooters           Scooter[]
+}
+
+model AdminProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  level     Int      @default(1) // Can be used for different admin levels later
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Scooter {
-  id              String   @id @default(uuid())
+  id              String        @id @default(uuid())
   name            String
-  model           String   @default("Standard")
   type            String
   pricePerDay     Float
-  rating          Float    @default(5.0)
-  reviews         Int      @default(0)
+  rating          Float         @default(5)
+  reviews         Int           @default(0)
   image           String
   description     String
-  isSpotlight     Boolean  @default(false)
+  isSpotlight     Boolean       @default(false)
   manufacturerUrl String?
-  location        String   @default("Unawatuna")
-  ownerName       String   @default("Ride Owner")
-  ownerWhatsapp   String   @default("+94700000000")
-  
-  // JSON field for flexible specs
+  location        String        @default("Unawatuna")
+  ownerName       String        @default("Ride Owner")
+  ownerWhatsapp   String        @default("+94700000000")
   specs           Json
-
-  // Status
-  status          String   @default("Available") // Available, Rented, Maintenance
-
-  // Live GPS tracking
+  status          String        @default("Available")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  model           String        @default("Standard")
   lastLat         Float?
   lastLng         Float?
-
-  // Relation to Host
   hostId          String?
-  host            User?    @relation(fields: [hostId], references: [id])
-
-  displayOrder    Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  bookings        Booking[]
+  displayOrder    Int           @default(0)
   blockedDates    BlockedDate[]
+  bookings        Booking[]
+  
+  // Point to HostProfile instead of User
+  host            HostProfile?  @relation(fields: [hostId], references: [id])
 }
 
 model BlockedDate {
   id        String   @id @default(uuid())
   scooterId String
-  scooter   Scooter  @relation(fields: [scooterId], references: [id])
   date      DateTime
   reason    String?  @default("Admin Blocked")
   createdAt DateTime @default(now())
+  scooter   Scooter  @relation(fields: [scooterId], references: [id])
 
   @@unique([scooterId, date])
 }
 
 model Review {
-  id        String   @id @default(uuid())
-  name      String
-  location  String
-  rating    Int
-  content   String
-  date      DateTime @default(now())
-  bike      String   // Can be the scooter name
-  approved  Boolean  @default(true) // Auto-approve for now
-  avatar    String   @default("https://i.pravatar.cc/150?u=default")
+  id       String   @id @default(uuid())
+  name     String
+  location String
+  rating   Int
+  content  String
+  date     DateTime @default(now())
+  bike     String
+  approved Boolean  @default(true)
+  avatar   String   @default("https://i.pravatar.cc/150?u=default")
 }
 
 model Booking {
-  id              String   @id
-  // Relation to Scooter
-  scooterId       String
-  scooter         Scooter  @relation(fields: [scooterId], references: [id])
-  
-  // Relation to User (optional for guest checkout if we supported it, but let's link it or store rider details directly)
-  userId          String?
-  user            User?    @relation(fields: [userId], references: [id])
-
-  riderName       String
-  riderEmail      String?
-  riderPhone      String
-  riderPassport   String
-
-  startDate       DateTime
-  endDate         DateTime
-  totalAmount     Float
-
-  status          String   @default("Pending") // Pending, Active, Completed, Cancelled
-  
-  // Verification details
-  verificationStatus String @default("Pending") // Pending, Verified, Rejected
-  
-  // JSON for documents urls (idFront, idBack, passport, signature)
-  documents       Json?
-
-  // Live GPS tracking
-  lastLat         Float?
-  lastLng         Float?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                 String   @id
+  scooterId          String
+  userId             String?
+  riderName          String
+  riderEmail         String?
+  riderPhone         String
+  riderPassport      String
+  startDate          DateTime
+  endDate            DateTime
+  totalAmount        Float
+  status             String   @default("Pending")
+  verificationStatus String   @default("Pending")
+  documents          Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  lastLat            Float?
+  lastLng            Float?
+  scooter            Scooter  @relation(fields: [scooterId], references: [id])
+  user               User?    @relation(fields: [userId], references: [id])
 }

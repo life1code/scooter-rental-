@@ -38,7 +38,7 @@ export default function FleetManagement() {
 
         const userRole = (session?.user as any)?.role;
         if (userRole !== "admin" && userRole !== "host" && userRole !== "superadmin") {
-            router.push("/");
+            router.push("/admin/login");
         }
     }, [status, session, router]);
 

@@ -16,24 +16,27 @@ export const authOptions: NextAuthOptions = {
             const SUPER_ADMIN_EMAILS = ['rydexpvtltd@gmail.com', 'smilylife996cha@gmail.com'];
 
             if (account?.provider === "google" && user.email) {
+                console.log("🔐 [NextAuth] Attempting Google Sign-in for:", user.email);
                 const { prisma } = await import("@/backend/lib/db");
 
-                // Get user from DB
                 const dbUser = await prisma.user.findUnique({
-                    where: { email: user.email }
+                    where: { email: user.email },
+                    select: { id: true, role: true }
                 });
+
+                console.log("🔐 [NextAuth] Found existing user in DB:", dbUser ? `Role: ${dbUser.role}` : "None (New User)");
 
                 const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email);
 
                 // If specialized super admin email but doesn't exist in DB yet
                 if (isSuperAdmin && !dbUser) {
+                    console.log("🔐 [NextAuth] Auto-creating Super Admin for:", user.email);
                     await prisma.user.create({
                         data: {
                             id: user.id,
                             email: user.email,
                             name: user.name || null,
-                            role: "superadmin",
-                            approvalStatus: "approved"
+                            role: "superadmin"
                         }
                     });
                     return true;
@@ -41,28 +44,25 @@ export const authOptions: NextAuthOptions = {
 
                 // If user doesn't exist at all, create as standard user
                 if (!dbUser) {
+                    console.log("🔐 [NextAuth] Auto-creating Standard User for:", user.email);
                     await prisma.user.create({
                         data: {
                             id: user.id,
                             email: user.email,
                             name: user.name || null,
-                            role: "user",
-                            approvalStatus: "approved"
+                            role: "user"
                         }
                     });
                     return true;
                 }
 
-                // If user is a host, check approval status but allow login (we will handle restriction in UI)
-                // if (dbUser.role === "host" && dbUser.approvalStatus !== "approved") {
-                //      throw new Error("Your host account is pending approval by a super admin.");
-                // }
-
                 // Auto-upgrade super admins if email matches but role isn't set
                 if (isSuperAdmin && dbUser.role !== "superadmin") {
+                    console.log("🔐 [NextAuth] Upgrading to Super Admin:", user.email);
                     await prisma.user.update({
                         where: { email: user.email },
-                        data: { role: "superadmin" }
+                        data: { role: "superadmin" },
+                        select: { id: true, role: true }
                     });
                 }
 
@@ -75,14 +75,29 @@ export const authOptions: NextAuthOptions = {
                 const { prisma } = await import("@/backend/lib/db");
                 const dbUser = await prisma.user.findUnique({
                     where: { email: session.user.email! },
-                    select: { id: true, role: true, institutionName: true }
+                    select: {
+                        id: true,
+                        email: true,
+                        role: true,
+                        hostProfile: {
+                            select: {
+                                institutionName: true,
+                                approvalStatus: true
+                            }
+                        }
+                    }
                 });
 
                 if (dbUser) {
+                    console.log(`🔐 [NextAuth] Session logic for ${dbUser.email}: Role=${dbUser.role}, Approved=${dbUser.hostProfile?.approvalStatus}`);
                     (session.user as any).id = dbUser.id;
                     (session.user as any).role = dbUser.role;
-                    (session.user as any).approvalStatus = (dbUser as any).approvalStatus;
-                    (session.user as any).institutionName = dbUser.institutionName;
+                    if (dbUser.hostProfile) {
+                        (session.user as any).approvalStatus = dbUser.hostProfile.approvalStatus;
+                        (session.user as any).institutionName = dbUser.hostProfile.institutionName;
+                    }
+                } else {
+                    console.log(`🔐 [NextAuth] Session logic: User ${session.user.email} not found in DB`);
                 }
             }
             return session;

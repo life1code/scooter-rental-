@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { User, LogOut, Menu, Bike } from "lucide-react";
+import { User, LogOut, Menu, Bike, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/backend/lib/utils";
 
 export function Navbar() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const userRole = (session?.user as any)?.role;
+    const isLoading = status === "loading";
     const isAdmin = userRole === "admin" || userRole === "host" || userRole === "superadmin";
 
     const handleSignOut = () => {
@@ -36,7 +37,9 @@ export function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {session ? (
+                    {isLoading ? (
+                        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-[var(--primary)] animate-spin"></div>
+                    ) : session ? (
                         <div className="flex items-center gap-3">
                             <div className="hidden sm:block text-right">
                                 <p className="text-xs font-medium">{session.user?.name}</p>
@@ -107,7 +110,11 @@ export function Navbar() {
                         )}
                     </div>
 
-                    {session ? (
+                    {isLoading ? (
+                        <div className="flex items-center justify-center p-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-[var(--primary)]" />
+                        </div>
+                    ) : session ? (
                         <button
                             onClick={() => {
                                 handleSignOut();

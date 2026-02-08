@@ -37,7 +37,7 @@ export default function AddScooter() {
 
         const userRole = (session?.user as any)?.role;
         if (userRole !== "admin" && userRole !== "host" && userRole !== "superadmin") {
-            router.push("/");
+            router.push("/admin/login");
             return;
         }
 

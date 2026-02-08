@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Lock, ShieldCheck, LogOut, AlertTriangle } from "lucide-react";
+import { Lock, ShieldCheck, LogOut, AlertTriangle, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/frontend/components/ToastProvider";
@@ -11,37 +12,80 @@ export default function AdminLogin() {
     const router = useRouter();
     const { showToast } = useToast();
 
+    // Show loading state while checking
+    if (status === "loading") {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Verifying Session...</p>
+                </div>
+            </div>
+        );
+    }
+
 
     useEffect(() => {
-        if (status === "loading") return;
-
         if (status === "authenticated" && session?.user) {
             const userRole = (session.user as any)?.role;
             const hasAccess = userRole === "admin" || userRole === "host" || userRole === "superadmin";
 
             if (hasAccess) {
-                // Authorized: Go to Dashboard
                 router.push("/admin");
             } else {
-                // Unauthorized: Show smart error and redirect home
-                showToast("Access Denied: Admin privileges required.", "error");
-                router.push("/");
+                // We'll show the access denied message in the UI instead of immediate redirect
+                console.log("Authenticated but no admin/host role. Showing registration option.");
             }
         }
-    }, [status, session, router, showToast]);
+    }, [status, session, router]);
 
     const handleGoogleSignIn = () => {
         signIn("google", { callbackUrl: "/admin" });
     };
 
-    // Show loading state while checking
     const userRole = (session?.user as any)?.role;
     const hasAccess = userRole === "admin" || userRole === "host" || userRole === "superadmin";
+    const isStandardUser = status === "authenticated" && !hasAccess;
 
     if (status === "authenticated" && session?.user && !hasAccess) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--primary)]"></div>
+            <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--background)]">
+                <div className="w-full max-w-md space-y-8 glass-card p-10 text-center relative overflow-hidden">
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl"></div>
+
+                    <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+                        <AlertTriangle className="w-8 h-8 text-red-500" />
+                    </div>
+
+                    <h1 className="text-2xl font-bold tracking-tight mb-2">Access Denied</h1>
+                    <p className="text-white/60 text-sm mb-8">
+                        The account <span className="text-white font-bold">{session.user.email}</span> does not have host or admin privileges.
+                    </p>
+
+                    <div className="space-y-3">
+                        <Link
+                            href="/auth/signup-host"
+                            className="w-full bg-[var(--primary)] text-black font-bold py-4 px-6 rounded-2xl hover:bg-[var(--primary)]/90 transition-all flex items-center justify-center gap-2"
+                        >
+                            <ShieldCheck className="w-5 h-5" />
+                            Register as a Host
+                        </Link>
+
+                        <button
+                            onClick={() => signOut({ callbackUrl: "/admin/login" })}
+                            className="w-full bg-white/5 text-white/60 font-medium py-4 px-6 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            Sign Out / Switch Account
+                        </button>
+                    </div>
+
+                    <div className="pt-8 mt-8 border-t border-white/5">
+                        <Link href="/" className="text-xs text-[var(--primary)] hover:underline font-bold uppercase tracking-widest">
+                            Return to Homepage
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -49,7 +93,6 @@ export default function AdminLogin() {
     return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--background)]">
             <div className="w-full max-w-md space-y-8 glass-card p-10 relative overflow-hidden">
-                {/* Decorative Elements */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--primary)]/10 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[var(--secondary)]/10 rounded-full blur-3xl"></div>
 
@@ -75,9 +118,11 @@ export default function AdminLogin() {
                         <span>Sign in with Google</span>
                     </button>
 
-                    <p className="text-xs text-white/40 text-center px-4">
-                        Only authorized admin accounts can access this dashboard.
-                    </p>
+                    {status === "unauthenticated" && (
+                        <p className="text-xs text-white/40 text-center px-4">
+                            Only authorized admin accounts can access this dashboard.
+                        </p>
+                    )}
                 </div>
 
                 <div className="pt-8 mt-8 border-t border-white/5 text-center">

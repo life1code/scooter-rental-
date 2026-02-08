@@ -32,7 +32,8 @@ export async function POST(request: Request) {
         if (userId) {
             try {
                 const userExists = await prisma.user.findUnique({
-                    where: { id: userId }
+                    where: { id: userId },
+                    select: { id: true }
                 });
 
                 if (!userExists) {
@@ -47,7 +48,21 @@ export async function POST(request: Request) {
 
         // Validate required fields
         if (!body.scooterId || !body.riderName || !body.riderPhone || !body.riderPassport) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+            console.error("Missing required fields. Body:", {
+                scooterId: body.scooterId,
+                riderName: !!body.riderName,
+                riderPhone: !!body.riderPhone,
+                riderPassport: !!body.riderPassport
+            });
+            return NextResponse.json({
+                error: "Missing required fields",
+                missingFields: {
+                    scooterId: !body.scooterId,
+                    riderName: !body.riderName,
+                    riderPhone: !body.riderPhone,
+                    riderPassport: !body.riderPassport
+                }
+            }, { status: 400 });
         }
 
         // Check for date conflicts

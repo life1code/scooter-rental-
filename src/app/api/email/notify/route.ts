@@ -3,8 +3,8 @@ import { sendNotificationEmail } from "@/backend/lib/email";
 
 export async function POST(request: Request) {
     try {
-        const { type, booking } = await request.json();
-        const result = await sendNotificationEmail({ type, booking });
+        const { type, booking, host } = await request.json();
+        const result = await sendNotificationEmail({ type, booking, host });
         return NextResponse.json(result);
     } catch (error: any) {
         console.error("Email API Route Error:", error);
