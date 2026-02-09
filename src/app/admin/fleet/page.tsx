@@ -15,7 +15,10 @@ import {
     CheckCircle2,
     XCircle,
     Plus,
-    Calendar
+    Calendar,
+    ArrowUp,
+    ArrowDown,
+    Save
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -86,6 +89,36 @@ export default function FleetManagement() {
         }
     };
 
+    const handleMove = (index: number, direction: 'up' | 'down') => {
+        const newScooters = [...allScooters];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+        if (targetIndex < 0 || targetIndex >= newScooters.length) return;
+
+        [newScooters[index], newScooters[targetIndex]] = [newScooters[targetIndex], newScooters[index]];
+        setAllScooters(newScooters);
+    };
+
+    const saveOrder = async () => {
+        try {
+            const orderedIds = allScooters.map(s => s.id);
+            const res = await fetch('/api/scooters/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderedIds })
+            });
+
+            if (res.ok) {
+                alert("Scooter order saved successfully!");
+            } else {
+                alert("Failed to save scooter order.");
+            }
+        } catch (error) {
+            console.error("Error saving order:", error);
+            alert("Failed to save order.");
+        }
+    };
+
     const filteredScooters = allScooters.filter(s =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -106,9 +139,17 @@ export default function FleetManagement() {
                         <h1 className="text-4xl font-bold tracking-tight">Fleet <span className="text-[var(--primary)]">Management</span></h1>
                         <p className="text-white/40">Manage your collection of {allScooters.length} scooters.</p>
                     </div>
-                    <Link href="/admin/scooters/new" className="btn-primary flex items-center gap-2 !py-2.5">
-                        <Plus className="w-4 h-4" /> Add New Scooter
-                    </Link>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={saveOrder}
+                            className="btn-secondary !bg-green-500/10 !text-green-500 !border-green-500/20 flex items-center gap-2 !py-2.5"
+                        >
+                            <Save className="w-4 h-4" /> Save Order
+                        </button>
+                        <Link href="/admin/scooters/new" className="btn-primary flex items-center gap-2 !py-2.5">
+                            <Plus className="w-4 h-4" /> Add New Scooter
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Filters Row */}
@@ -135,6 +176,7 @@ export default function FleetManagement() {
                             <thead>
                                 <tr className="bg-white/5 border-b border-white/10">
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Scooter</th>
+                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Reorder</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Price/Day</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Rating</th>
@@ -153,6 +195,26 @@ export default function FleetManagement() {
                                                     <p className="text-sm font-bold">{scooter.name}</p>
                                                     <p className="text-[10px] text-white/40 uppercase tracking-widest">{scooter.id}</p>
                                                 </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleMove(allScooters.indexOf(scooter), 'up')}
+                                                    disabled={allScooters.indexOf(scooter) === 0}
+                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white disabled:opacity-20 transition-colors"
+                                                    title="Move Up"
+                                                >
+                                                    <ArrowUp className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleMove(allScooters.indexOf(scooter), 'down')}
+                                                    disabled={allScooters.indexOf(scooter) === allScooters.length - 1}
+                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white disabled:opacity-20 transition-colors"
+                                                    title="Move Down"
+                                                >
+                                                    <ArrowDown className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </td>
                                         <td className="p-4">
