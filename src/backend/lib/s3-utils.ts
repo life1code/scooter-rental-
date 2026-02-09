@@ -29,7 +29,6 @@ async function uploadToS3(buffer: Buffer, key: string, contentType: string, buck
         Key: key,
         Body: buffer,
         ContentType: contentType,
-        ACL: 'public-read',
     });
 
     await s3Client.send(command);
