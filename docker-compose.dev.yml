@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    image: node:20-alpine
+    container_name: scooter-rental-dev
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require
+      - NEXTAUTH_URL=https://dev.ceylonrider.com
+      - NEXT_PUBLIC_BASE_URL=https://dev.ceylonrider.com
+    env_file:
+      - .env.production
+    command: sh -c "npm install && npx prisma generate && npm run build && npm start"
+    restart: unless-stopped
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
