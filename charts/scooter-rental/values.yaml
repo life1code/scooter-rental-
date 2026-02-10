@@ -88,6 +88,9 @@ affinity: {}
 database:
   url: "postgresql://DUMMY_USER:DUMMY_PASSWORD@DUMMY_HOST:5432/postgres?sslmode=require"
 
+adminer:
+  nodePort: 30081
+
 google:
   clientId: "DUMMY_CLIENT_ID"
   clientSecret: "DUMMY_CLIENT_SECRET"
