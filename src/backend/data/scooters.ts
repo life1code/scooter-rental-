@@ -19,6 +19,7 @@ export interface Scooter {
     location?: string;
     ownerName?: string;
     ownerWhatsapp?: string;
+    position?: number;
 }
 
 export const SCOOTERS: Scooter[] = [

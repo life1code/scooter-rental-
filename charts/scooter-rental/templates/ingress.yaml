@@ -41,11 +41,26 @@ spec:
     - host: {{ $hostItem.host | quote }}
       http:
         paths:
+          {{- if $hostItem.paths }}
           {{- range $pathItem := $hostItem.paths }}
           - path: {{ $pathItem.path }}
             {{- if and $pathItem.pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
             pathType: {{ $pathItem.pathType }}
             {{- end }}
+            backend:
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+              service:
+                name: {{ if contains "adminer" $hostItem.host }}adminer{{ else }}{{ $fullName }}{{ end }}
+                port:
+                  number: {{ if contains "adminer" $hostItem.host }}8080{{ else }}{{ $svcPort }}{{ end }}
+              {{- else }}
+              serviceName: {{ if contains "adminer" $hostItem.host }}adminer{{ else }}{{ $fullName }}{{ end }}
+              servicePort: {{ if contains "adminer" $hostItem.host }}8080{{ else }}{{ $svcPort }}{{ end }}
+              {{- end }}
+          {{- end }}
+          {{- else }}
+          - path: /
+            pathType: Prefix
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:

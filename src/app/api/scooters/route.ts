@@ -53,7 +53,10 @@ export async function GET(request: Request) {
                     }
                 }
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: [
+                { displayOrder: 'asc' },
+                { createdAt: 'desc' }
+            ]
         });
 
         return NextResponse.json(scooters);
