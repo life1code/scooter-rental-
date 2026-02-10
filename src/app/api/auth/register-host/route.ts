@@ -43,7 +43,7 @@ export async function POST(request: Request) {
                     name,
                     role: "host",
                 },
-                select: { id: true, role: true, email: true, name: true }
+                select: { id: true, role: true, email: true, name: true, hostProfile: true }
             });
         } else {
             // Update existing user role if they are just a 'user'
