@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             orderedIds.map((id, index) =>
                 prisma.scooter.update({
                     where: { id },
-                    data: { position: index }
+                    data: { displayOrder: index }
                 })
             )
         );
