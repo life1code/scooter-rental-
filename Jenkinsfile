@@ -2,9 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Use default namespace for main branch, 'dev' for others to prevent production impact
-        K8S_NAMESPACE = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'default' : 'dev'}"
+        // Use default namespace for main branch, 'default' for dev (on separate cluster)
+        K8S_NAMESPACE = "default"
         APP_NAME = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'scooter-rental' : 'scooter-rental-dev'}"
+        
+        // Use different kubeconfig for dev instance
+        KUBECONFIG_FILE = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'remote-kubeconfig.yaml' : 'dev-kubeconfig.yaml'}"
         
         REGISTRY = 'ttl.sh'
         IMAGE_TAG = "scooter-rental-${env.BUILD_NUMBER}:2h"
@@ -35,20 +38,20 @@ pipeline {
                 script {
                     echo "Deploying to Kubernetes in namespace ${K8S_NAMESPACE}..."
                     def isProd = (env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main')
-                    def nodePortParam = isProd ? "--set service.nodePort=30080 --set adminer.nodePort=30081" : "--set service.nodePort=null --set adminer.nodePort=null"
-                    def hostParam = isProd ? "" : "--set ingress.hosts[0].host=dev.ceylonrider.com --set ingress.hosts[1].host=dev-www.ceylonrider.com --set ingress.hosts[2].host=dev-adminer.ceylonrider.com"
-                    def dbUrlParam = isProd ? "" : "--set database.url='postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require'"
+                    
+                    // Use dev-values.yaml for dev deployments
+                    def valuesParam = isProd ? "" : "-f ./charts/scooter-rental/dev-values.yaml"
+                    def nodePortParam = isProd ? "--set service.nodePort=30080 --set adminer.nodePort=30081" : ""
                     
                     sh """
                         helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
-                        --kubeconfig remote-kubeconfig.yaml \
+                        --kubeconfig ${KUBECONFIG_FILE} \
                         --namespace ${K8S_NAMESPACE} \
                         --set image.repository=${REGISTRY}/scooter-rental-${env.BUILD_NUMBER} \
                         --set image.tag=2h \
                         --set image.pullPolicy=Always \
                         ${nodePortParam} \
-                        ${hostParam} \
-                        ${dbUrlParam} \
+                        ${valuesParam} \
                         --disable-openapi-validation
                     """
                 }
