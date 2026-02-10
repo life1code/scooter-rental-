@@ -1,0 +1,34 @@
+# Dev Environment Values Override
+# This file contains dev-specific configuration
+
+ingress:
+  enabled: true
+  hosts:
+    - host: dev.ceylonrider.com
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: dev-www.ceylonrider.com
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: dev-adminer.ceylonrider.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Dev database connection
+database:
+  url: "postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
+
+# Disable NodePort for dev (use ClusterIP)
+service:
+  type: ClusterIP
+  nodePort: null
+
+adminer:
+  nodePort: null
+
+# Disable AWS Secrets Manager for dev
+secretProviderClass:
+  enabled: false
