@@ -37,6 +37,7 @@ pipeline {
                     def isProd = (env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main')
                     def nodePortParam = isProd ? "--set service.nodePort=30080 --set adminer.nodePort=30081" : "--set service.nodePort=null --set adminer.nodePort=null"
                     def hostParam = isProd ? "" : "--set ingress.hosts[0].host=dev.ceylonrider.com --set ingress.hosts[1].host=dev-www.ceylonrider.com --set ingress.hosts[2].host=dev-adminer.ceylonrider.com"
+                    def dbUrlParam = isProd ? "" : "--set database.url='postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require'"
                     
                     sh """
                         helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
@@ -47,6 +48,7 @@ pipeline {
                         --set image.pullPolicy=Always \
                         ${nodePortParam} \
                         ${hostParam} \
+                        ${dbUrlParam} \
                         --disable-openapi-validation
                     """
                 }

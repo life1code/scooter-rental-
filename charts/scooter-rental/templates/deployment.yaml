@@ -37,10 +37,14 @@ spec:
               protocol: TCP
           env:
             - name: DATABASE_URL
+              {{- if .Values.database.url }}
+              value: {{ .Values.database.url | quote }}
+              {{- else }}
               valueFrom:
                 secretKeyRef:
                   name: {{ include "scooter-rental.fullname" . }}-synced-secrets
                   key: DATABASE_URL
+              {{- end }}
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:
