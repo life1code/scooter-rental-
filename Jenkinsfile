@@ -1,13 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        label env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'built-in' : 'dev-agent'
+    }
 
     environment {
-        // Use default namespace for main branch, 'default' for dev (on separate cluster)
+        // Namespace is always default (separate clusters for prod/dev)
         K8S_NAMESPACE = "default"
         APP_NAME = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'scooter-rental' : 'scooter-rental-dev'}"
-        
-        // Use different kubeconfig for dev instance
-        KUBECONFIG_FILE = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'remote-kubeconfig.yaml' : 'dev-kubeconfig.yaml'}"
         
         REGISTRY = 'ttl.sh'
         IMAGE_TAG = "scooter-rental-${env.BUILD_NUMBER}:2h"
@@ -39,13 +38,17 @@ pipeline {
                     echo "Deploying to Kubernetes in namespace ${K8S_NAMESPACE}..."
                     def isProd = (env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main')
                     
-                    // Use dev-values.yaml for dev deployments
+                    // Dev uses local K3s, prod uses remote kubeconfig
+                    def kubeconfigParam = isProd ? "--kubeconfig remote-kubeconfig.yaml" : ""
                     def valuesParam = isProd ? "" : "-f ./charts/scooter-rental/dev-values.yaml"
                     def nodePortParam = isProd ? "--set service.nodePort=30080 --set adminer.nodePort=30081" : ""
                     
+                    // Set KUBECONFIG for K3s on dev agent
+                    def kubeconfigEnv = isProd ? "" : "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && "
+                    
                     sh """
-                        helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
-                        --kubeconfig ${KUBECONFIG_FILE} \
+                        ${kubeconfigEnv}helm upgrade --install ${APP_NAME} ./charts/scooter-rental \
+                        ${kubeconfigParam} \
                         --namespace ${K8S_NAMESPACE} \
                         --set image.repository=${REGISTRY}/scooter-rental-${env.BUILD_NUMBER} \
                         --set image.tag=2h \
