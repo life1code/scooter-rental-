@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = 'scooter-rental'
-        // Use ttl.sh ephemeral registry (no auth required, images last 2h)
+        // Use default namespace for main branch, 'dev' for others to prevent production impact
+        K8S_NAMESPACE = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'default' : 'dev'}"
+        APP_NAME = "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'scooter-rental' : 'scooter-rental-dev'}"
+        
         REGISTRY = 'ttl.sh'
-        // Unique image tag per build
         IMAGE_TAG = "scooter-rental-${env.BUILD_NUMBER}:2h"
-        K8S_NAMESPACE = 'default'
     }
 
     stages {
