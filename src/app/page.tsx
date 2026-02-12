@@ -43,7 +43,7 @@ export default function Home() {
 
     async function loadBookings() {
       try {
-        const res = await fetch('/api/bookings');
+        const res = await fetch('/api/bookings?checkAvailability=true');
         if (res.ok) {
           const data = await res.json();
           setAllBookings(data);
