@@ -81,7 +81,6 @@ export default function Home() {
         const engineVal = scooter.specs?.engine ? parseInt(scooter.specs.engine) : 0;
         if (selectedEngine === "110cc") matchEngine = engineVal >= 100 && engineVal < 120;
         else if (selectedEngine === "125cc") matchEngine = engineVal >= 120 && engineVal < 140;
-        else if (selectedEngine === "150cc+") matchEngine = engineVal >= 140;
       }
 
       // Real availability logic
@@ -272,7 +271,7 @@ export default function Home() {
 
                 {showEngine && (
                   <div className="absolute top-[calc(100%+12px)] left-0 right-0 z-[100] bg-[#1e2124] rounded-2xl border border-white/10 shadow-2xl overflow-hidden py-2 animate-in fade-in zoom-in-95">
-                    {["All Power", "110cc", "125cc", "150cc+"].map((ePower) => (
+                    {["All Power", "110cc", "125cc"].map((ePower) => (
                       <button
                         key={ePower}
                         className="w-full text-left px-5 py-3 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-between"
