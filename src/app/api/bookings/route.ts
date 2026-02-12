@@ -205,9 +205,25 @@ export async function GET(request: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user) {
-            // Guests shouldn't see all bookings, just return empty list
-            // They rely on localStorage for their specific pending booking
-            return NextResponse.json([]);
+            const publicBookings = await prisma.booking.findMany({
+                where: {
+                    status: {
+                        notIn: ['Cancelled', 'Completed']
+                    },
+                    endDate: {
+                        gte: new Date() // Only fetch future/active bookings
+                    }
+                },
+                select: {
+                    scooterId: true,
+                    startDate: true,
+                    endDate: true,
+                    status: true
+                }
+            });
+
+            // Return public booking data for availability check
+            return NextResponse.json(publicBookings);
         }
 
         const userId = (session.user as any).id;
