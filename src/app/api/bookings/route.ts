@@ -217,9 +217,12 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const { searchParams } = new URL(request.url);
+        const checkAvailability = searchParams.get('checkAvailability') === 'true';
 
-        if (!session?.user) {
+        // 1. Availability Check (For Calendar Filter - Everyone)
+        if (checkAvailability) {
+            // Fetch active bookings (public data only)
             const publicBookings = await prisma.booking.findMany({
                 where: {
                     status: {
@@ -237,8 +240,34 @@ export async function GET(request: Request) {
                 }
             });
 
-            // Return public booking data for availability check
-            return NextResponse.json(publicBookings);
+            // Fetch blocked dates
+            const blockedDates = await prisma.blockedDate.findMany({
+                where: {
+                    date: {
+                        gte: new Date()
+                    }
+                }
+            });
+
+            // Transform blocked dates to look like bookings for the frontend
+            const formattedBlocked = blockedDates.map(b => ({
+                scooterId: b.scooterId,
+                startDate: b.date,
+                endDate: b.date,
+                status: 'Blocked'
+            }));
+
+            // Merge and return
+            return NextResponse.json([...publicBookings, ...formattedBlocked]);
+        }
+
+        // 2. User/Admin Booking History (For "My Bookings" / Dashboard)
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user) {
+            // Guest accessing "My Bookings" endpoint directly -> Return empty
+            // (Guests rely on localStorage in frontend, this purely restricted API access)
+            return NextResponse.json([]);
         }
 
         const userId = (session.user as any).id;
