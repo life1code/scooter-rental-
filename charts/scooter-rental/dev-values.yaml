@@ -21,6 +21,9 @@ ingress:
 database:
   url: "postgresql://scooter_admin:ScooterPass2026@scooter-db.c3gocgi6okg2.ap-southeast-2.rds.amazonaws.com:5432/postgres?sslmode=require"
 
+nextauth:
+  baseUrl: "https://dev.ceylonrider.com"
+
 # Disable NodePort for dev (use ClusterIP)
 service:
   type: ClusterIP
