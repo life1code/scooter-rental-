@@ -80,7 +80,7 @@ export default function BookingConfirm() {
         if (startDate && endDate && scooter) {
             const start = new Date(startDate);
             const end = new Date(endDate);
-            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
             if (days > 0) {
                 setNumberOfDays(days);
