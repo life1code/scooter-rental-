@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        agent { label 'sooter-dev' }
+        label "${env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' ? 'built-in' : 'sooter-dev'}"
     }
 
     environment {
