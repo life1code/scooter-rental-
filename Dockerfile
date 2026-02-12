@@ -1,6 +1,6 @@
 
-FROM node:20-slim AS base
-RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM node:20-alpine AS base
+RUN apk add --no-cache openssl ca-certificates libc6-compat
 RUN npm install -g prisma@5.10.0
 
 
@@ -40,8 +40,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
 
 COPY --from=builder /app/public ./public
 
