@@ -91,6 +91,11 @@ function AdminDashboardContent() {
         }
     }, [searchParams]);
 
+    // User Role Extraction
+    const userRole = (session?.user as any)?.role;
+    const approvalStatus = (session?.user as any)?.approvalStatus;
+    const isSuperAdmin = userRole === "superadmin";
+
     useEffect(() => {
         if (status === "loading") return;
 
@@ -99,8 +104,16 @@ function AdminDashboardContent() {
             return;
         }
 
+<<<<<<< HEAD
         if (userRole !== "admin" && userRole !== "host" && userRole !== "superadmin") {
             router.push("/admin/login");
+=======
+        const isGoogleAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+
+        // Basic check for admin role access if not Google Admin
+        if (!isGoogleAdmin && userRole !== "admin" && userRole !== "host" && userRole !== "superadmin") {
+            router.push("/");
+>>>>>>> 67b28cd (Restore Admin Dashboard features: Fleet link, Grid layout, Auth logic)
         }
     }, [status, session, router, userRole]);
 
@@ -316,6 +329,7 @@ function AdminDashboardContent() {
                             }
                         </p>
                     </div>
+<<<<<<< HEAD
                     <div className="flex flex-wrap gap-4">
                         <Link
                             href="/track"
@@ -335,6 +349,190 @@ function AdminDashboardContent() {
                             <Link
                                 href="/admin/business"
                                 className="btn-secondary !bg-amber-500/10 !text-amber-500 !border-amber-500/20 flex items-center justify-center gap-2 !py-3 px-6 rounded-xl hover:!bg-amber-500/20 transition-all font-bold text-sm"
+=======
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 w-full md:w-auto">
+                        <Link href="/track" className="btn-secondary !bg-blue-500/10 !text-blue-500 !border-blue-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                            <Navigation className="w-4 h-4" /> Live Map
+                        </Link>
+                        <Link href="/admin/customers" className="btn-secondary !bg-purple-500/10 !text-purple-500 !border-purple-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                            <Users className="w-4 h-4" /> Customers
+                        </Link>
+
+                        {/* Fleet Management Link for Super Admins */}
+                        {isSuperAdmin && (
+                            <Link href="/admin/fleet" className="btn-secondary !bg-green-500/10 !text-green-500 !border-green-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                                <Bike className="w-4 h-4" /> Fleet Management
+                            </Link>
+                        )}
+
+                        {/* General Management Link (renamed or hidden if redundant for superadmin, keeping for now as 'Management') */}
+                        {!isSuperAdmin && (
+                            <Link href="/admin/fleet" className="btn-secondary flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                                <Settings className="w-4 h-4" /> Management
+                            </Link>
+                        )}
+
+                        <Link href="/admin/scooters/new" className="btn-primary flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap w-full md:w-auto">
+                            <Plus className="w-4 h-4" /> Add New Scooter
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    {stats.map((stat, i) => (
+                        <div key={i} className="glass-card p-6 border-white/5">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className={`p-3 rounded-xl ${stat.bg}`}>
+                                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                                </div>
+                                <TrendingUp className="w-4 h-4 text-green-500" />
+                            </div>
+                            <p className="text-xs font-bold text-white/40 uppercase tracking-widest">{stat.label}</p>
+                            <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Live Tracking Map Section */}
+                <div className="mb-12 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold">Live Fleet Tracking</h2>
+                        <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-green-500">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            Live Updates Active
+                        </span>
+                    </div>
+                    <div className="glass-card p-4 border-white/5">
+                        <TrackingMap activeBookings={bookings.filter(b => b.status === "Active")} allScooters={scooters} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Recent Requests Table */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold">Recent Rental Requests</h2>
+                        </div>
+
+                        <div className="glass-card overflow-hidden border-white/5">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-white/5 border-b border-white/10">
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Reference</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Rider</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Scooter</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Pickup</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Return</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
+                                            <th className="p-4 text-[10px] font-bold uppercase text-white/40 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {bookings.map((booking) => (
+                                            <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
+                                                <td className="p-4 text-sm font-medium">{booking.id.slice(0, 8)}</td>
+                                                <td className="p-4">
+                                                    <p className="text-sm font-bold">{booking.riderName}</p>
+                                                    <p className="text-[10px] text-white/40">{new Date(booking.createdAt).toLocaleDateString()}</p>
+                                                </td>
+                                                <td className="p-4 text-sm text-white/80">{booking.scooter?.name}</td>
+                                                <td className="p-4 text-xs text-white/60">{new Date(booking.startDate).toLocaleDateString()}</td>
+                                                <td className="p-4 text-xs text-white/60">{new Date(booking.endDate).toLocaleDateString()}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${booking.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
+                                                        booking.status === 'Active' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
+                                                            booking.status === 'Cancelled' ? 'bg-red-500/10 text-red-500' :
+                                                                'bg-white/10 text-white/60'
+                                                        }`}>
+                                                        {booking.status}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => setSelectedCustomer(booking)}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
+                                                            title="View Identity"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAction(booking.id, 'Active')}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-[var(--primary)] transition-colors"
+                                                            title="Approve"
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAction(booking.id, 'Completed')}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-green-500 transition-colors"
+                                                            title="Mark Completed"
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAction(booking.id, 'Cancelled')}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-red-500 transition-colors"
+                                                            title="Cancel Booking"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                const start = new Date(booking.startDate);
+                                                                const end = new Date(booking.endDate);
+                                                                const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+                                                                // Calculate discount
+                                                                let discount = 0;
+                                                                if (days >= 30) discount = 12;
+                                                                else if (days >= 7) discount = 5;
+
+                                                                generateRentalAgreement({
+                                                                    id: booking.id,
+                                                                    rider: booking.riderName,
+                                                                    bike: booking.scooter?.name,
+                                                                    date: new Date(booking.createdAt).toLocaleDateString(),
+                                                                    bookingTime: new Date(booking.createdAt).toLocaleTimeString(),
+                                                                    rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
+                                                                    amount: `$${booking.totalAmount}`,
+                                                                    pricePerDay: booking.scooter?.pricePerDay,
+                                                                    discount: discount,
+                                                                    details: {
+                                                                        passport: booking.riderPassport,
+                                                                        phone: booking.riderPhone,
+                                                                        idFront: booking.documents?.idFront,
+                                                                        idBack: booking.documents?.idBack,
+                                                                        passportImg: booking.documents?.passport,
+                                                                        signature: booking.documents?.signature
+                                                                    }
+                                                                });
+                                                            }}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-blue-500 transition-colors"
+                                                            title="Download Agreement"
+                                                        >
+                                                            <Download className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Fleet Status */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold">Fleet Performance</h2>
+                            <button
+                                onClick={downloadFleetReport}
+                                className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary)] font-bold rounded-xl hover:bg-[var(--primary)]/20 transition-colors text-xs uppercase tracking-wider"
+>>>>>>> 67b28cd (Restore Admin Dashboard features: Fleet link, Grid layout, Auth logic)
                             >
                                 <Building2 className="w-4 h-4" /> Business Center
                             </Link>

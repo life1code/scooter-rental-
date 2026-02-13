@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/frontend/components/Navbar";
 import {
@@ -14,7 +14,8 @@ import {
     ShieldCheck,
     FileText,
     ExternalLink,
-    X
+    X,
+    Store
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,6 +28,8 @@ interface Customer {
     joinDate: string;
     idBack: string;
     idFront: string;
+    shopName: string;
+    scooterId: string;
 }
 
 export default function CustomerManagement() {
@@ -34,6 +37,7 @@ export default function CustomerManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [selectedShop, setSelectedShop] = useState<string>("All Shops");
 
 
     // Initial check for admin session
@@ -65,7 +69,9 @@ export default function CustomerManagement() {
                         status: b.verificationStatus || 'Pending',
                         joinDate: new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
                         idFront: b.documents?.idFront || "/images/id-front-template.png",
-                        idBack: b.documents?.idBack || "/images/id-back-template.png"
+                        idBack: b.documents?.idBack || "/images/id-back-template.png",
+                        shopName: b.scooter?.ownerName || "Unknown Shop",
+                        scooterId: b.scooterId
                     }));
 
                     // Load static customers
@@ -78,7 +84,9 @@ export default function CustomerManagement() {
                             status: 'Verified',
                             joinDate: "Jan 15, 2026",
                             idFront: "/images/id-front-template.png",
-                            idBack: "/images/id-back-template.png"
+                            idBack: "/images/id-back-template.png",
+                            shopName: "Ride Owner",
+                            scooterId: "static-scooter-1"
                         }
                     ];
 
@@ -92,10 +100,21 @@ export default function CustomerManagement() {
         checkAuthAndFetch();
     }, [router]);
 
-    const filteredCustomers = customers.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.passportNumber.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Extract unique shop names for filter
+    const uniqueShops = useMemo(() => {
+        const shops = new Set(customers.map(c => c.shopName));
+        return ["All Shops", ...Array.from(shops)];
+    }, [customers]);
+
+    const filteredCustomers = customers.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.passportNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.shopName.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesShop = selectedShop === "All Shops" || c.shopName === selectedShop;
+
+        return matchesSearch && matchesShop;
+    });
 
     const handleVerify = (id: string, status: 'Verified' | 'Rejected') => {
         setCustomers(customers.map(c => c.id === id ? { ...c, status } : c));
@@ -134,15 +153,29 @@ export default function CustomerManagement() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                         <input
                             type="text"
-                            placeholder="Search by name or passport..."
+                            placeholder="Search by name, passport, or shop..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
                         />
                     </div>
-                    <button className="btn-secondary flex items-center gap-2 px-6">
-                        <Filter className="w-4 h-4" /> Filters
-                    </button>
+
+                    {/* Shop Filter */}
+                    <div className="relative min-w-[200px]">
+                        <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                        <select
+                            value={selectedShop}
+                            onChange={(e) => setSelectedShop(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white focus:outline-none focus:border-[var(--primary)] transition-all appearance-none cursor-pointer"
+                        >
+                            {uniqueShops.map(shop => (
+                                <option key={shop} value={shop} className="bg-black text-white">{shop}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <Filter className="w-3 h-3 text-white/40" />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Customers Table */}
@@ -152,52 +185,66 @@ export default function CustomerManagement() {
                             <thead>
                                 <tr className="bg-white/5 border-b border-white/10">
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Customer</th>
-                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Passport / ID</th>
-                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Verification</th>
+                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Details</th>
+                                    <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40">Join Date</th>
                                     <th className="p-4 text-[10px] font-bold uppercase text-white/40 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {filteredCustomers.map((customer) => (
-                                    <tr key={customer.id} className="hover:bg-white/[0.02] transition-colors">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                                    <User className="w-5 h-5 text-white/40" />
+                                {filteredCustomers.length > 0 ? (
+                                    filteredCustomers.map((customer) => (
+                                        <tr key={customer.id} className="hover:bg-white/[0.02] transition-colors">
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                                                        <User className="w-5 h-5 text-white/40" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold">{customer.name}</p>
+                                                        <p className="text-[10px] text-white/40">{customer.email}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold">{customer.name}</p>
-                                                    <p className="text-[10px] text-white/40">{customer.email}</p>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText className="w-3 h-3 text-white/20" />
+                                                        <span className="text-xs font-medium uppercase tracking-wider">{customer.passportNumber}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Store className="w-3 h-3 text-[var(--primary)]/60" />
+                                                        <span className="text-[10px] text-white/60">{customer.shopName}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="w-3 h-3 text-white/20" />
-                                                <span className="text-sm font-medium uppercase">{customer.passportNumber}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${customer.status === 'Verified' ? 'bg-green-500/10 text-green-500' :
-                                                customer.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
-                                                    'bg-red-500/10 text-red-500'
-                                                }`}>
-                                                {customer.status}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-sm text-white/40">{customer.joinDate}</td>
-                                        <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => setSelectedCustomer(customer)}
-                                                className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
-                                                title="View Identity Documents"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${customer.status === 'Verified' ? 'bg-green-500/10 text-green-500' :
+                                                    customer.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
+                                                        'bg-red-500/10 text-red-500'
+                                                    }`}>
+                                                    {customer.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-sm text-white/40">{customer.joinDate}</td>
+                                            <td className="p-4 text-right">
+                                                <button
+                                                    onClick={() => setSelectedCustomer(customer)}
+                                                    className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
+                                                    title="View Identity Documents"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="p-8 text-center text-white/40">
+                                            No customers found matching the selected filters.
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -216,7 +263,12 @@ export default function CustomerManagement() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold">{selectedCustomer.name}</h3>
-                                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Passport: {selectedCustomer.passportNumber}</p>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold border-r border-white/10 pr-3">Passport: {selectedCustomer.passportNumber}</p>
+                                        <p className="text-[10px] text-[var(--primary)] uppercase tracking-widest font-bold flex items-center gap-1">
+                                            <Store className="w-3 h-3" /> {selectedCustomer.shopName}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             <button onClick={() => setSelectedCustomer(null)} className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors">
