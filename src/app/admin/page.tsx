@@ -1055,7 +1055,14 @@ function AdminDashboardContent() {
     );
 }
 function ShopProfiler({ hostId, allBookings, allScooters, generateAgreement }: { hostId: string, allBookings: any[], allScooters: any[], generateAgreement: any }) {
-    const shopBookings = allBookings.filter(b => b.scooter?.hostId === hostId);
+    const [searchTerm, setSearchTerm] = useState("");
+    const shopBookings = allBookings
+        .filter(b => b.scooter?.hostId === hostId)
+        .filter(b =>
+            searchTerm === "" ||
+            b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            b.riderName.toLowerCase().includes(searchTerm.toLowerCase())
+        );
     const shopScooters = allScooters.filter(s => s.hostId === hostId);
 
     // Distinct customers who have booked with this shop
@@ -1140,6 +1147,17 @@ function ShopProfiler({ hostId, allBookings, allScooters, generateAgreement }: {
                     <h4 className="text-sm font-bold flex items-center gap-2 mb-6">
                         <Clock className="w-4 h-4 text-amber-500" /> Recent Shop Activity
                     </h4>
+
+                    <div className="relative mb-4">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input
+                            type="text"
+                            placeholder="Search activity by Reference or Rider..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                        />
+                    </div>
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                         {shopBookings.map(booking => {
                             const start = new Date(booking.startDate);

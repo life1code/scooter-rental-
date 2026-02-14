@@ -35,6 +35,7 @@ export default function ShopsPage() {
     const [loading, setLoading] = useState(true);
     const [selectedShop, setSelectedShop] = useState<ShopData | null>(null);
     const [activeTab, setActiveTab] = useState<'scooters' | 'bookings' | 'customers' | 'invoices'>('scooters');
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (status === "loading") return;
@@ -231,41 +232,58 @@ export default function ShopsPage() {
                             )}
 
                             {activeTab === 'bookings' && (
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-white/10 text-white/40 text-xs uppercase">
-                                            <th className="p-4">Reference</th>
-                                            <th className="p-4">Rider</th>
-                                            <th className="p-4">Scooter</th>
-                                            <th className="p-4">Dates</th>
-                                            <th className="p-4">Amount</th>
-                                            <th className="p-4">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {bookings
-                                            .filter(b => b.scooter?.hostId === selectedShop.hostId)
-                                            .map(booking => (
-                                                <tr key={booking.id} className="hover:bg-white/5">
-                                                    <td className="p-4 font-mono text-sm">{booking.id.slice(0, 8)}</td>
-                                                    <td className="p-4 text-sm font-bold">{booking.riderName}</td>
-                                                    <td className="p-4 text-sm text-white/60">{booking.scooter?.name}</td>
-                                                    <td className="p-4 text-xs text-white/40">
-                                                        {new Date(booking.startDate).toLocaleDateString()} -
-                                                        {new Date(booking.endDate).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="p-4 font-bold">${booking.totalAmount}</td>
-                                                    <td className="p-4">
-                                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${booking.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-white/10'
-                                                            }`}>
-                                                            {booking.status}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        }
-                                    </tbody>
-                                </table>
+                                <div className="space-y-4">
+                                    <div className="relative w-full md:w-96">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search by Reference or Rider..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                                        />
+                                    </div>
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-white/10 text-white/40 text-xs uppercase">
+                                                <th className="p-4">Reference</th>
+                                                <th className="p-4">Rider</th>
+                                                <th className="p-4">Scooter</th>
+                                                <th className="p-4">Dates</th>
+                                                <th className="p-4">Amount</th>
+                                                <th className="p-4">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {bookings
+                                                .filter(b => b.scooter?.hostId === selectedShop.hostId)
+                                                .filter(b =>
+                                                    searchTerm === "" ||
+                                                    b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                    b.riderName.toLowerCase().includes(searchTerm.toLowerCase())
+                                                )
+                                                .map(booking => (
+                                                    <tr key={booking.id} className="hover:bg-white/5">
+                                                        <td className="p-4 font-mono text-sm">{booking.id.slice(0, 8)}</td>
+                                                        <td className="p-4 text-sm font-bold">{booking.riderName}</td>
+                                                        <td className="p-4 text-sm text-white/60">{booking.scooter?.name}</td>
+                                                        <td className="p-4 text-xs text-white/40">
+                                                            {new Date(booking.startDate).toLocaleDateString()} -
+                                                            {new Date(booking.endDate).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="p-4 font-bold">${booking.totalAmount}</td>
+                                                        <td className="p-4">
+                                                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${booking.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-white/10'
+                                                                }`}>
+                                                                {booking.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
 
                             {activeTab === 'customers' && (
