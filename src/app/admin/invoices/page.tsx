@@ -10,7 +10,8 @@ import {
     Download,
     Building2,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    ArrowLeft
 } from 'lucide-react';
 import { generateRentalAgreement } from "@/reportservice/pdf-service";
 import { useToast } from "@/frontend/components/ToastProvider";
@@ -145,6 +146,12 @@ export default function InvoicesPage() {
             <Navbar />
             <div className="max-w-7xl mx-auto px-4 pt-12">
                 <div className="flex items-center gap-4 mb-8">
+                    <button
+                        onClick={() => router.push('/admin')}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
                     <div className="p-3 bg-pink-500/10 rounded-xl text-pink-500">
                         <FileText className="w-8 h-8" />
                     </div>
@@ -173,8 +180,8 @@ export default function InvoicesPage() {
                                     key={shop.hostId}
                                     onClick={() => setSelectedShop(shop)}
                                     className={`w-full text-left p-4 rounded-xl transition-all border ${selectedShop?.hostId === shop.hostId
-                                            ? 'bg-[var(--primary)]/10 border-[var(--primary)]/50'
-                                            : 'bg-white/5 border-transparent hover:bg-white/10'
+                                        ? 'bg-[var(--primary)]/10 border-[var(--primary)]/50'
+                                        : 'bg-white/5 border-transparent hover:bg-white/10'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-1">

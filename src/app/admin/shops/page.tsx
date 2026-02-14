@@ -124,14 +124,12 @@ export default function ShopsPage() {
 
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
-                    {selectedShop && (
-                        <button
-                            onClick={() => setSelectedShop(null)}
-                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                        >
-                            <ArrowLeft className="w-6 h-6" />
-                        </button>
-                    )}
+                    <button
+                        onClick={() => selectedShop ? setSelectedShop(null) : router.push('/admin')}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
                     <div>
                         <h1 className="text-3xl font-bold">
                             {selectedShop ? selectedShop.name : "Shops Management"}
@@ -221,7 +219,7 @@ export default function ShopsPage() {
                                                 </div>
                                                 <div className="text-right">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${scooter.status === 'Available' ? 'bg-green-500/10 text-green-500' :
-                                                            'bg-red-500/10 text-red-500'
+                                                        'bg-red-500/10 text-red-500'
                                                         }`}>
                                                         {scooter.status}
                                                     </span>
