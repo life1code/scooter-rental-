@@ -335,9 +335,17 @@ function AdminDashboardContent() {
 
                         {/* Fleet Management Link for Super Admins */}
                         {isSuperAdmin && (
-                            <Link href="/admin/fleet" className="btn-secondary !bg-green-500/10 !text-green-500 !border-green-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
-                                <Bike className="w-4 h-4" /> Fleet Management
-                            </Link>
+                            <>
+                                <Link href="/admin/fleet" className="btn-secondary !bg-green-500/10 !text-green-500 !border-green-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                                    <Bike className="w-4 h-4" /> Fleet Management
+                                </Link>
+                                <Link href="/admin/shops" className="btn-secondary !bg-orange-500/10 !text-orange-500 !border-orange-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                                    <Building2 className="w-4 h-4" /> Shops
+                                </Link>
+                                <Link href="/admin/invoices" className="btn-secondary !bg-pink-500/10 !text-pink-500 !border-pink-500/20 flex items-center justify-center gap-2 !py-2.5 rounded-xl transition-all font-bold text-[11px] whitespace-nowrap">
+                                    <FileText className="w-4 h-4" /> Invoices
+                                </Link>
+                            </>
                         )}
 
                         {/* General Management Link (renamed or hidden if redundant for superadmin, keeping for now as 'Management') */}
