@@ -13,7 +13,7 @@ import {
     ArrowRight,
     ArrowLeft
 } from 'lucide-react';
-import { generateRentalAgreement } from "@/reportservice/pdf-service";
+import { generateRentalAgreement, generateInvoice } from "@/reportservice/pdf-service";
 import { useToast } from "@/frontend/components/ToastProvider";
 
 interface ShopData {
@@ -99,24 +99,15 @@ export default function InvoicesPage() {
             if (days >= 30) discount = 12;
             else if (days >= 7) discount = 5;
 
-            generateRentalAgreement({
-                id: booking.id,
-                rider: booking.riderName,
-                bike: booking.scooter?.name,
-                date: new Date(booking.createdAt).toLocaleDateString(),
-                bookingTime: new Date(booking.createdAt).toLocaleTimeString(),
-                rentalPeriod: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
+            generateInvoice({
+                invoiceNumber: booking.id.slice(0, 8).toUpperCase(),
+                date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                shopName: booking.scooter?.host?.institutionName || booking.scooter?.host?.name || "Ride Scooter Rentals",
+                shopAddress: "Unawatuna, Sri Lanka", // Could be dynamic if address exists in host data
+                period: `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`,
                 amount: `$${booking.totalAmount}`,
-                pricePerDay: booking.scooter?.pricePerDay,
-                discount: discount,
-                details: {
-                    passport: booking.riderPassport,
-                    phone: booking.riderPhone,
-                    idFront: booking.documents?.idFront,
-                    idBack: booking.documents?.idBack,
-                    passportImg: booking.documents?.passport,
-                    signature: booking.documents?.signature
-                }
+                scooterName: booking.scooter?.name,
+                paymentDate: new Date(booking.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
             });
             showToast("Invoice downloaded successfully", "success");
         } catch (error) {

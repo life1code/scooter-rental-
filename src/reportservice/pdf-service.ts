@@ -142,3 +142,127 @@ export const generateAgreementBase64 = (booking: any) => {
     console.log(`📄 PDF Generated: Length=${output.length}, Prefix=${output.substring(0, 50)}...`);
     return output;
 };
+
+/**
+ * Builds the Invoice Document (Booking.com Style)
+ */
+const buildInvoiceDoc = (data: any) => {
+    const doc = new jsPDF();
+
+    // --- Header (Dark Background) ---
+    doc.setFillColor(33, 33, 33);
+    doc.rect(0, 0, 210, 35, 'F');
+
+    // Rydex Logo (White text/logo if available, or place standard logo)
+    try {
+        const logoData = RYDEX_LOGO.length > 100 ? RYDEX_LOGO : "/images/pdf-logo.png";
+        doc.addImage(logoData, "PNG", 15, 5, 35, 25);
+    } catch (e) {
+        console.error("Logo failed to load:", e);
+    }
+
+    // Invoice Title
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice", 195, 22, { align: "right" });
+
+    // --- Shop & Invoice Info ---
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+
+    let y = 50;
+
+    // Left Column: Shop/Host Details
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(data.shopName || "Ride Scooter Rentals", 15, y);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    y += 5;
+    if (data.shopAddress) {
+        const addressLines = doc.splitTextToSize(data.shopAddress, 80);
+        doc.text(addressLines, 15, y);
+    } else {
+        doc.text("Sri Lanka", 15, y);
+    }
+
+    // Right Column: Invoice Details
+    doc.setFontSize(9);
+    const rightColX = 140;
+    y = 50;
+
+    const addRightDetail = (label: string, value: string) => {
+        doc.text(`${label}:`, rightColX, y);
+        doc.text(`${value}`, 195, y, { align: "right" });
+        y += 5;
+    };
+
+    addRightDetail("Invoice number", data.invoiceNumber);
+    addRightDetail("Date", data.date);
+    addRightDetail("Period", data.period);
+
+    // --- INVOICE TABLE ---
+    y = 90;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("INVOICE", 105, y, { align: "center" });
+    y += 10;
+
+    // Table Header
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(15, y, 195, y); // Top line
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    y += 6;
+    doc.text("Description", 15, y);
+    doc.text("Amount", 195, y, { align: "right" });
+    y += 3;
+
+    doc.setLineWidth(0.1);
+    doc.line(15, y, 195, y); // Bottom of header
+
+    // Table Body
+    y += 8;
+    // Reservation Item
+    doc.setFontSize(10);
+    doc.text("Reservations", 15, y);
+    doc.text(data.amount, 195, y, { align: "right" });
+
+    // Sub-details for reservation (optional)
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`${data.scooterName} (${data.period})`, 15, y);
+    doc.setTextColor(0, 0, 0);
+
+    y += 10;
+    doc.setLineWidth(0.1);
+    doc.line(15, y, 195, y); // Separator
+
+    // --- Totals ---
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Total amount due", 15, y);
+    doc.text(data.amount, 195, y, { align: "right" });
+
+    y += 5;
+    doc.setLineWidth(0.5);
+    doc.line(15, y, 195, y); // Thick separator
+
+    // --- Payment Due ---
+    y += 15;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Payment due: ${data.paymentDate}`, 105, y, { align: "center" });
+
+    return doc;
+};
+
+export const generateInvoice = (data: any) => {
+    const doc = buildInvoiceDoc(data);
+    doc.save(`Invoice-${data.invoiceNumber}.pdf`);
+};
