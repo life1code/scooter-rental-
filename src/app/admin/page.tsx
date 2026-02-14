@@ -504,7 +504,7 @@ function AdminDashboardContent() {
                             {/* Stats Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                                 {stats.map((stat, i) => (
-                                    <div key={i} className="glass-card p-6 border-white/5">
+                                    <div key={i} className="glass-card p-3 sm:p-6 border-white/5">
                                         <div className="flex items-center justify-between mb-4">
                                             <div className={`p-3 rounded-xl ${stat.bg}`}>
                                                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -526,7 +526,7 @@ function AdminDashboardContent() {
                                         Live Updates Active
                                     </span>
                                 </div>
-                                <div className="glass-card p-2 sm:p-4 border-white/5">
+                                <div className="glass-card p-1 sm:p-4 border-white/5">
                                     <TrackingMap activeBookings={bookings.filter(b => b.status === "Active")} allScooters={scooters} />
                                 </div>
                             </div>
@@ -691,7 +691,7 @@ function AdminDashboardContent() {
                                             <Download className="w-4 h-4" /> Download Report
                                         </button>
                                     </div>
-                                    <div className="glass-card p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                                    <div className="glass-card p-3 sm:p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
                                         {scooters.map((scooter) => {
                                             // Calculate revenue for display
                                             const scooterRevenue = bookings
