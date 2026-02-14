@@ -979,9 +979,8 @@ function AdminDashboardContent() {
                     )}
                 </>
             )}
-        </div>
-    </main >
-);
+        </main >
+    );
 }
 function ShopProfiler({ hostId, allBookings, allScooters, generateAgreement }: { hostId: string, allBookings: any[], allScooters: any[], generateAgreement: any }) {
     const shopBookings = allBookings.filter(b => b.scooter?.hostId === hostId);
