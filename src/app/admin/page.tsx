@@ -328,7 +328,7 @@ function AdminDashboardContent() {
         <main className="min-h-screen bg-[var(--background)] pb-20">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-4 pt-12">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 pt-12">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                     <div>
                         <h1 className="text-4xl font-bold tracking-tight">
@@ -526,7 +526,7 @@ function AdminDashboardContent() {
                                         Live Updates Active
                                     </span>
                                 </div>
-                                <div className="glass-card p-4 border-white/5">
+                                <div className="glass-card p-2 sm:p-4 border-white/5">
                                     <TrackingMap activeBookings={bookings.filter(b => b.status === "Active")} allScooters={scooters} />
                                 </div>
                             </div>
