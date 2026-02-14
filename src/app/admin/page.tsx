@@ -411,7 +411,28 @@ function AdminDashboardContent() {
                     {/* Recent Requests Table */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold">Recent Rental Requests</h2>
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold">Recent Rental Requests</h2>
+                                {shopFilter && (
+                                    <button
+                                        onClick={() => setShopFilter(null)}
+                                        className="flex items-center gap-2 px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-xs font-bold hover:bg-[var(--primary)]/20 transition-colors"
+                                    >
+                                        Filtered by: {shopFilter}
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                            </div>
+                            <div className="relative w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by Reference or Rider..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                                />
+                            </div>
                         </div>
 
                         <div className="glass-card overflow-hidden border-white/5">
@@ -430,7 +451,7 @@ function AdminDashboardContent() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
-                                        {bookings.map((booking) => (
+                                        {filteredBookings.map((booking) => (
                                             <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
                                                 <td className="p-4 text-sm font-medium">{booking.id.slice(0, 8)}</td>
                                                 <td className="p-4">
@@ -439,9 +460,12 @@ function AdminDashboardContent() {
                                                 </td>
                                                 {isSuperAdmin && (
                                                     <td className="p-4">
-                                                        <span className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/5 px-2 py-1 rounded uppercase tracking-wider">
+                                                        <button
+                                                            onClick={() => setShopFilter(booking.scooter?.host?.institutionName || "Ride Admin")}
+                                                            className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/5 px-2 py-1 rounded uppercase tracking-wider hover:bg-[var(--primary)]/20 transition-colors"
+                                                        >
                                                             {booking.scooter?.host?.institutionName || "Ride Admin"}
-                                                        </span>
+                                                        </button>
                                                     </td>
                                                 )}
                                                 <td className="p-4 text-sm text-white/80">{booking.scooter?.name}</td>
