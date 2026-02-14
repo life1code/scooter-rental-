@@ -564,26 +564,26 @@ function AdminDashboardContent() {
                                             <table className="w-full text-left border-collapse">
                                                 <thead>
                                                     <tr className="bg-white/5 border-b border-white/10">
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40">Reference</th>
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40">Rider</th>
-                                                        {isSuperAdmin && <th className="p-4 text-[10px] font-bold uppercase text-white/40">Institution</th>}
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40">Scooter</th>
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40">Pickup</th>
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40">Return</th>
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40">Status</th>
-                                                        <th className="p-4 text-[10px] font-bold uppercase text-white/40 text-right">Action</th>
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Reference</th>
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Rider</th>
+                                                        {isSuperAdmin && <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Institution</th>}
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Scooter</th>
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Pickup</th>
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Return</th>
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 whitespace-nowrap">Status</th>
+                                                        <th className="p-2 sm:p-4 text-[10px] font-bold uppercase text-white/40 text-right whitespace-nowrap">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-white/5">
                                                     {filteredBookings.map((booking) => (
                                                         <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
-                                                            <td className="p-4 text-sm font-medium">{booking.id.slice(0, 8)}</td>
-                                                            <td className="p-4">
+                                                            <td className="p-2 sm:p-4 text-sm font-medium whitespace-nowrap">{booking.id.slice(0, 8)}</td>
+                                                            <td className="p-2 sm:p-4 whitespace-nowrap">
                                                                 <p className="text-sm font-bold">{booking.riderName}</p>
                                                                 <p className="text-[10px] text-white/40">{new Date(booking.createdAt).toLocaleDateString()}</p>
                                                             </td>
                                                             {isSuperAdmin && (
-                                                                <td className="p-4">
+                                                                <td className="p-2 sm:p-4 whitespace-nowrap">
                                                                     <button
                                                                         onClick={() => setShopFilter(booking.scooter?.host?.institutionName || "Ride Admin")}
                                                                         className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/5 px-2 py-1 rounded uppercase tracking-wider hover:bg-[var(--primary)]/20 transition-colors"
@@ -592,10 +592,10 @@ function AdminDashboardContent() {
                                                                     </button>
                                                                 </td>
                                                             )}
-                                                            <td className="p-4 text-sm text-white/80">{booking.scooter?.name}</td>
-                                                            <td className="p-4 text-xs text-white/60">{new Date(booking.startDate).toLocaleDateString()}</td>
-                                                            <td className="p-4 text-xs text-white/60">{new Date(booking.endDate).toLocaleDateString()}</td>
-                                                            <td className="p-4">
+                                                            <td className="p-2 sm:p-4 text-sm text-white/80 whitespace-nowrap">{booking.scooter?.name}</td>
+                                                            <td className="p-2 sm:p-4 text-xs text-white/60 whitespace-nowrap">{new Date(booking.startDate).toLocaleDateString()}</td>
+                                                            <td className="p-2 sm:p-4 text-xs text-white/60 whitespace-nowrap">{new Date(booking.endDate).toLocaleDateString()}</td>
+                                                            <td className="p-2 sm:p-4 whitespace-nowrap">
                                                                 <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${booking.status === 'Pending' ? 'bg-[var(--secondary)]/10 text-[var(--secondary)]' :
                                                                     booking.status === 'Active' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
                                                                         booking.status === 'Cancelled' ? 'bg-red-500/10 text-red-500' :
@@ -604,7 +604,7 @@ function AdminDashboardContent() {
                                                                     {booking.status}
                                                                 </span>
                                                             </td>
-                                                            <td className="p-4 text-right">
+                                                            <td className="p-2 sm:p-4 text-right whitespace-nowrap">
                                                                 <div className="flex justify-end gap-2">
                                                                     <button
                                                                         onClick={() => setSelectedCustomer(booking)}
